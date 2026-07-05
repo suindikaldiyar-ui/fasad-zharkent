@@ -26,6 +26,6 @@ export async function middleware(req: NextRequest) {
 // роуте — вторая линия на случай утечки cookie/сессии.
 export const config = {
   matcher: [
-    "/((?!login|api/login|_next/static|_next/image|references|favicon.ico|robots.txt|sitemap.xml).*)",
+    "/((?!login|api/login|_next/static|_next/image|references|logo.png|favicon.ico|robots.txt|sitemap.xml).*)",
   ],
 };

@@ -10,6 +10,7 @@ import { BRACKETS } from "@/lib/brackets";
 import { TERMOPANELS } from "@/lib/termopanels";
 import { FACADE_COLORS } from "@/lib/facadecolors";
 import { compressImage, type CompressedImage } from "@/lib/image";
+import { MAX_REFERENCE_IMAGES } from "@/lib/constants";
 
 interface Props {
   foundationId: string | null;
@@ -50,6 +51,20 @@ export default function Visualizer({
         ? decorIds.filter((x) => x !== id)
         : [...decorIds, id]
     );
+
+  // Сколько фото-референсов уйдёт в Gemini (та же логика бюджета, что на сервере):
+  // комплект обрамления = 3 фото, остальные материалы = 1. Цвет фасада и декор —
+  // текстовые подсказки, в бюджет фото не входят.
+  const selectedFrame = FRAMES.find((f) => f.id === frameId);
+  const frameCost = selectedFrame ? (selectedFrame.setImages ? 3 : 1) : 0;
+  const photoRefCount =
+    (foundationId ? 1 : 0) +
+    frameCost +
+    (columnId ? 1 : 0) +
+    (beltId ? 1 : 0) +
+    (bracketId ? 1 : 0) +
+    (termopanelId ? 1 : 0);
+  const overRefLimit = photoRefCount > MAX_REFERENCE_IMAGES;
 
   async function handleFile(file: File | undefined | null) {
     if (!file) return;
@@ -304,6 +319,46 @@ export default function Visualizer({
             </button>
           )}
 
+
+          {/* Каталог материалов — заголовок, бюджет фото и путь для фото */}
+          <div className="rounded-xl border border-line bg-canvas/40 p-3.5">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-gold/15 text-gold">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                </svg>
+              </span>
+              <p className="text-sm font-bold text-ink">Каталог материалов</p>
+            </div>
+            <p className="mt-1.5 text-xs text-muted">
+              Выберите отделку в карточках ниже — выбранное уходит референсом в ИИ.
+            </p>
+
+            {/* Индикатор бюджета фото-референсов (сервер шлёт максимум MAX) */}
+            <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-line pt-2.5 text-xs">
+              <span className="text-muted">Фото-референсов к Gemini</span>
+              <span className={`tnum font-bold ${overRefLimit ? "text-gold" : "text-ink"}`}>
+                {photoRefCount} / {MAX_REFERENCE_IMAGES}
+              </span>
+            </div>
+            {overRefLimit && (
+              <p className="mt-2 rounded-lg border border-gold/30 bg-gold/10 px-2.5 py-1.5 text-[11px] leading-snug text-gold">
+                Выбрано больше {MAX_REFERENCE_IMAGES}: к Gemini уйдут только{" "}
+                {MAX_REFERENCE_IMAGES} фото (приоритет: материал стен → обрамление →
+                цоколь → колонны → пояс → кронштейны), остальное — текстовым описанием.
+              </p>
+            )}
+
+            <p className="mt-2.5 text-[11px] leading-snug text-muted/80">
+              Фото каталога кладите в{" "}
+              <code className="rounded bg-stone px-1 py-0.5 text-gold">
+                public/references/&lt;категория&gt;/&lt;id&gt;.jpg
+              </code>
+            </p>
+          </div>
 
           {/* Цвет фасада (краска стен) */}
           <div>

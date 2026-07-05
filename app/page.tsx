@@ -11,6 +11,7 @@ import ParamsPanel from "@/components/ParamsPanel";
 import EstimatePanel from "@/components/EstimatePanel";
 import ClientKP from "@/components/ClientKP";
 import Visualizer from "@/components/Visualizer";
+import { COMPANY } from "@/lib/company";
 
 const INITIAL_INPUTS: CalcInputs = {
   wallList: [
@@ -39,25 +40,16 @@ export default function Page() {
 
   return (
     <main className="min-h-screen">
-      {/* Header */}
-      <header className="border-b border-line bg-stone text-ink">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-          <div className="flex items-center gap-3">
-            {/* Монограмма-логотип: жёлтая плашка «FZ» */}
-            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gold to-goldLight text-base font-extrabold tracking-tight text-stone shadow-gold">
-              FZ
-            </span>
-            <div className="min-w-0">
-              <h1 className="truncate text-lg font-extrabold leading-tight tracking-tight">
-                Fasad Zharkent
-              </h1>
-              <p className="truncate text-xs text-muted">
-                Калькулятор фасада · AI-визуализация
-              </p>
-            </div>
-          </div>
-          <span className="hidden rounded-full border border-gold/40 px-3 py-1 text-xs text-gold sm:block">
-            г. Жаркент · фасады и термопанели
+      {/* Hero — крупный логотип по центру, над калькулятором */}
+      <header className="border-b border-line bg-gradient-to-b from-stone to-canvas">
+        <div className="mx-auto flex max-w-6xl flex-col items-center px-5 py-10 text-center sm:py-14">
+          <BrandMark />
+          <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+            {COMPANY.name}
+          </h1>
+          <p className="mt-1.5 text-sm font-medium text-muted">г. {COMPANY.city}</p>
+          <span className="mt-4 inline-flex items-center rounded-full border border-gold/40 px-4 py-1 text-xs font-medium text-gold">
+            Калькулятор фасада · AI-визуализация
           </span>
         </div>
       </header>
@@ -91,5 +83,26 @@ export default function Page() {
         </footer>
       </div>
     </main>
+  );
+}
+
+// Логотип hero: если есть /logo.png — показываем его; иначе крупная монограмма FZ.
+function BrandMark() {
+  const [logoOk, setLogoOk] = useState(true);
+  if (logoOk) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src="/logo.png"
+        alt="Fasad Zharkent"
+        onError={() => setLogoOk(false)}
+        className="h-24 w-auto object-contain sm:h-28"
+      />
+    );
+  }
+  return (
+    <span className="inline-flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-goldLight text-4xl font-extrabold tracking-tight text-stone shadow-gold sm:h-28 sm:w-28 sm:text-5xl">
+      FZ
+    </span>
   );
 }

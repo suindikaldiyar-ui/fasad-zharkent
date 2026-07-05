@@ -10,6 +10,7 @@ import { getBracket } from "@/lib/brackets";
 import { getTermopanel } from "@/lib/termopanels";
 import { getFacadeColor } from "@/lib/facadecolors";
 import { getClientIp, rateLimit } from "@/lib/ratelimit";
+import { MAX_REFERENCE_IMAGES } from "@/lib/constants";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -17,11 +18,7 @@ export const maxDuration = 60;
 const MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image";
 const MAX_IMAGE_CHARS = 8 * 1024 * 1024; // ~8 МБ base64 — серверный предел
 
-// Максимум фото-референсов в ОДНОМ запросе к Gemini (не считая IMAGE 1 = дом).
-// Много референсов → модель «галлюцинирует» (мешает детали разных картинок).
-// Всё сверх лимита уходит ТЕКСТОВОЙ подсказкой (hint), а не картинкой.
-const MAX_REFERENCE_IMAGES = 4;
-
+// Лимит фото-референсов на запрос — MAX_REFERENCE_IMAGES из lib/constants.ts.
 // Все фото-референсы лежат в public/references/<папка>/<id>.jpg
 const REF_ROOT = "references";
 
