@@ -10,12 +10,21 @@ import { BRACKETS } from "@/lib/brackets";
 import { TERMOPANELS } from "@/lib/termopanels";
 import { DECOR, DECOR_CATEGORY_LABEL } from "@/lib/decor";
 import { TEXTURES } from "@/lib/textures";
+import { AMK } from "@/lib/amk";
 
 // Нормализованная карточка каталога (единый вид для всех категорий).
 type CardItem = { id: string; name: string; image: string; swatch?: string; note?: string };
 
 // key = папка в public/references/<key>/ И параметр для /visualizer?cat=<key>
 const SECTIONS: { key: string; title: string; canVisualize: boolean; items: CardItem[] }[] = [
+  {
+    key: "amk",
+    // Названия и список генерируются из имён файлов public/references/amk/
+    // (см. scripts/generate-amk-manifest.mjs → lib/amk.ts).
+    title: "АМК (кирпич)",
+    canVisualize: true, // материал стен → /visualizer?cat=amk&id=<id>
+    items: AMK.map((a) => ({ id: a.id, name: a.name, image: a.image })),
+  },
   {
     key: "termopanels",
     title: "Термопанели (материал стен)",

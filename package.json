@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "amk:manifest": "node scripts/generate-amk-manifest.mjs",
+    "predev": "node scripts/generate-amk-manifest.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/generate-amk-manifest.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

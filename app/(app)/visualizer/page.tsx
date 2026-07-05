@@ -20,6 +20,8 @@ function mapInitial(cat: string | null, id: string | null): VisualizerInitial | 
       return { bracketId: id };
     case "termopanels":
       return { termopanelId: id };
+    case "amk":
+      return { amkId: id };
     case "decor":
       return { decorIds: [id] };
     case "facadecolors":

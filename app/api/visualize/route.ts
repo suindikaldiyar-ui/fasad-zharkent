@@ -8,6 +8,7 @@ import { getColumn } from "@/lib/columns";
 import { getBelt } from "@/lib/belts";
 import { getBracket } from "@/lib/brackets";
 import { getTermopanel } from "@/lib/termopanels";
+import { AMK } from "@/lib/amk";
 import { getFacadeColor } from "@/lib/facadecolors";
 import { getClientIp, rateLimit } from "@/lib/ratelimit";
 import { MAX_REFERENCE_IMAGES } from "@/lib/constants";
@@ -44,6 +45,7 @@ interface Body {
   beltId?: string | null; // id межэтажного пояса (null = без пояса)
   bracketId?: string | null; // id кронштейна (null = без кронштейна)
   termopanelId?: string | null; // id термопанельной планки (null = без)
+  amkId?: string | null; // id кирпича АМК — материал стен (null = без)
   comment?: string; // доп. комментарий пользователя
 }
 
@@ -153,6 +155,7 @@ export async function POST(req: NextRequest) {
   const beltId = cleanId(body.beltId);
   const bracketId = cleanId(body.bracketId);
   const termopanelId = cleanId(body.termopanelId);
+  const amkId = cleanId(body.amkId);
   const decorIds = Array.isArray(body.decorIds)
     ? (body.decorIds.map(cleanId).filter(Boolean) as string[])
     : [];
@@ -240,6 +243,16 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // АМК (кирпич) — материал стен, тем же путём, что термопанель. Фото из /amk/.
+  const amk = amkId ? AMK.find((a) => a.id === amkId) : undefined;
+  let amkAsset: ImageAsset | null = null;
+  if (amk) {
+    amkAsset = loadAssetFromDisk("amk", amk.id);
+    if (!amkAsset) {
+      amkAsset = await loadAssetFromUrl("amk", amk.id, getOrigin(req));
+    }
+  }
+
   // ── Лимит фото-референсов (анти-галлюцинации) ──
   // Держим не больше MAX_REFERENCE_IMAGES картинок-референсов на запрос.
   // frameSet = 3 картинки, остальные = 1. Что не влезло — обнуляем: тогда ниже
@@ -254,6 +267,7 @@ export async function POST(req: NextRequest) {
     return false;
   };
   if (termopanelAsset && !takeRef(1)) termopanelAsset = null;
+  if (amkAsset && !takeRef(1)) amkAsset = null;
   if (frameSet && !takeRef(3)) frameSet = null;
   if (frameAsset && !takeRef(1)) frameAsset = null;
   if (foundationAsset && !takeRef(1)) foundationAsset = null;
@@ -308,8 +322,13 @@ export async function POST(req: NextRequest) {
   }
   let termopanelIndex = 0;
   if (termopanelAsset) {
-    termopanelIndex = ++imgCount; // последний референс (после кронштейна)
+    termopanelIndex = ++imgCount; // референс материала стен (термопанель)
     imageParts.push({ inline_data: { mime_type: termopanelAsset.mimeType, data: termopanelAsset.data } });
+  }
+  let amkIndex = 0;
+  if (amkAsset) {
+    amkIndex = ++imgCount; // референс материала стен (кирпич АМК)
+    imageParts.push({ inline_data: { mime_type: amkAsset.mimeType, data: amkAsset.data } });
   }
 
   // Базовый промпт: IMAGE 1 = дом. Материал стен задаётся термопанелью (если выбрана).
@@ -448,6 +467,24 @@ export async function POST(req: NextRequest) {
       `\n\nCover all the plaster/wall surfaces of the house with a thermopanel wall cladding ` +
       `material (${termopanel.hint}). Apply it as the main wall facade cladding at realistic ` +
       `scale. Keep windows, roof, doors and surroundings unchanged.`;
+  }
+
+  // АМК (кирпич) — материал стен, тем же путём, что термопанель.
+  if (amk && amkAsset) {
+    prompt +=
+      `\n\nIMAGE ${amkIndex} shows an AMK brick facade cladding material (its texture, ` +
+      `color and surface pattern). Use it as the MAIN WALL MATERIAL: cover the ENTIRE facade ` +
+      `wall surface of the house in IMAGE 1 with this brick cladding, completely replacing the ` +
+      `existing brick or plaster. Apply the texture and color from IMAGE ${amkIndex} at realistic ` +
+      `architectural scale over all wall areas. Keep windows, roof, doors, balcony, stairs and ` +
+      `surroundings exactly as in IMAGE 1. This is full facade wall cladding, not a small ` +
+      `insert — the whole wall must be covered. Ignore any background in IMAGE ${amkIndex}, ` +
+      `copy only the brick material.`;
+  } else if (amk) {
+    prompt +=
+      `\n\nCover all the plaster/wall surfaces of the house with AMK decorative brick facade ` +
+      `cladding. Apply it as the main wall facade cladding at realistic scale. Keep windows, ` +
+      `roof, doors and surroundings unchanged.`;
   }
 
   // Доп. инструкции пользователя

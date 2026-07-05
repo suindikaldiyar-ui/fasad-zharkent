@@ -8,6 +8,7 @@ import { COLUMNS } from "@/lib/columns";
 import { BELTS } from "@/lib/belts";
 import { BRACKETS } from "@/lib/brackets";
 import { TERMOPANELS } from "@/lib/termopanels";
+import { AMK } from "@/lib/amk";
 import { FACADE_COLORS } from "@/lib/facadecolors";
 import { compressImage, type CompressedImage } from "@/lib/image";
 import { MAX_REFERENCE_IMAGES } from "@/lib/constants";
@@ -20,6 +21,7 @@ export interface VisualizerInitial {
   beltId?: string | null;
   bracketId?: string | null;
   termopanelId?: string | null;
+  amkId?: string | null;
   facadeColorId?: string;
   decorIds?: string[];
 }
@@ -40,6 +42,7 @@ export default function Visualizer({ initial }: Props) {
   const [beltId, setBeltId] = useState<string | null>(initial?.beltId ?? null);
   const [bracketId, setBracketId] = useState<string | null>(initial?.bracketId ?? null);
   const [termopanelId, setTermopanelId] = useState<string | null>(initial?.termopanelId ?? null);
+  const [amkId, setAmkId] = useState<string | null>(initial?.amkId ?? null);
   const [comment, setComment] = useState("");
   const [compareBrackets, setCompareBrackets] = useState(false);
   const [result, setResult] = useState<string | null>(null); // data url «ПОСЛЕ» (обычный режим)
@@ -68,7 +71,8 @@ export default function Visualizer({ initial }: Props) {
     (columnId ? 1 : 0) +
     (beltId ? 1 : 0) +
     (bracketId ? 1 : 0) +
-    (termopanelId ? 1 : 0);
+    (termopanelId ? 1 : 0) +
+    (amkId ? 1 : 0);
   const overRefLimit = photoRefCount > MAX_REFERENCE_IMAGES;
 
   async function handleFile(file: File | undefined | null) {
@@ -106,6 +110,7 @@ export default function Visualizer({ initial }: Props) {
         beltId,
         bracketId: bId,
         termopanelId,
+        amkId,
         comment: comment.trim(),
       }),
     });
@@ -692,6 +697,79 @@ export default function Visualizer({ initial }: Props) {
                           {t.name}
                         </span>
                         <span className="block text-[10px] text-muted">{t.size}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* АМК (кирпич) — материал стен, тот же принцип, что термопанель */}
+          <div>
+            <p className="mb-2 text-sm font-semibold text-ink">
+              АМК (кирпич){" "}
+              <span className="font-normal text-muted">— материал стен</span>
+            </p>
+            {AMK.length === 0 ? (
+              <ComingSoon />
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {/* «Без АМК» — всегда */}
+                <button
+                  type="button"
+                  onClick={() => setAmkId(null)}
+                  className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
+                    amkId === null
+                      ? "border-gold ring-2 ring-gold/30"
+                      : "border-line hover:border-gold/40"
+                  }`}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-muted">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="m5 5 14 14" />
+                    </svg>
+                  </span>
+                  <span className="text-xs font-medium leading-tight text-ink">
+                    Без АМК
+                  </span>
+                </button>
+
+                {AMK.map((a) => {
+                  const active = a.id === amkId;
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => setAmkId(a.id)}
+                      className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
+                        active
+                          ? "border-gold ring-2 ring-gold/30"
+                          : "border-line hover:border-gold/40"
+                      }`}
+                    >
+                      {failedImg[a.image] ? (
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-muted">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="9" cy="9" r="2" />
+                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                          </svg>
+                        </span>
+                      ) : (
+                        <img
+                          src={a.image}
+                          alt={a.name}
+                          loading="lazy"
+                          onError={() =>
+                            setFailedImg((p) => ({ ...p, [a.image]: true }))
+                          }
+                          className="h-8 w-8 shrink-0 rounded-lg border border-black/10 object-cover"
+                        />
+                      )}
+                      <span className="block truncate text-xs font-medium leading-tight text-ink">
+                        {a.name}
                       </span>
                     </button>
                   );
