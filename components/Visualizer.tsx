@@ -12,27 +12,34 @@ import { FACADE_COLORS } from "@/lib/facadecolors";
 import { compressImage, type CompressedImage } from "@/lib/image";
 import { MAX_REFERENCE_IMAGES } from "@/lib/constants";
 
-interface Props {
-  foundationId: string | null;
-  decorIds: string[];
-  onFoundationId: (id: string | null) => void;
-  onDecorIds: (ids: string[]) => void;
+// Необязательный предвыбор материала (напр. переход из /catalog «визуализировать этим»).
+export interface VisualizerInitial {
+  foundationId?: string | null;
+  frameId?: string | null;
+  columnId?: string | null;
+  beltId?: string | null;
+  bracketId?: string | null;
+  termopanelId?: string | null;
+  facadeColorId?: string;
+  decorIds?: string[];
 }
 
-export default function Visualizer({
-  foundationId,
-  decorIds,
-  onFoundationId,
-  onDecorIds,
-}: Props) {
+interface Props {
+  initial?: VisualizerInitial;
+}
+
+export default function Visualizer({ initial }: Props) {
   const [source, setSource] = useState<CompressedImage | null>(null);
-  const [frameId, setFrameId] = useState<string | null>(null);
+  // Выбор материалов — локальное состояние визуализатора (можно предзаполнить из /catalog).
+  const [foundationId, setFoundationId] = useState<string | null>(initial?.foundationId ?? null);
+  const [decorIds, setDecorIds] = useState<string[]>(initial?.decorIds ?? []);
+  const [frameId, setFrameId] = useState<string | null>(initial?.frameId ?? null);
   const [frameColor, setFrameColor] = useState<"none" | "white" | "beige">("none");
-  const [facadeColorId, setFacadeColorId] = useState<string>("none");
-  const [columnId, setColumnId] = useState<string | null>(null);
-  const [beltId, setBeltId] = useState<string | null>(null);
-  const [bracketId, setBracketId] = useState<string | null>(null);
-  const [termopanelId, setTermopanelId] = useState<string | null>(null);
+  const [facadeColorId, setFacadeColorId] = useState<string>(initial?.facadeColorId ?? "none");
+  const [columnId, setColumnId] = useState<string | null>(initial?.columnId ?? null);
+  const [beltId, setBeltId] = useState<string | null>(initial?.beltId ?? null);
+  const [bracketId, setBracketId] = useState<string | null>(initial?.bracketId ?? null);
+  const [termopanelId, setTermopanelId] = useState<string | null>(initial?.termopanelId ?? null);
   const [comment, setComment] = useState("");
   const [compareBrackets, setCompareBrackets] = useState(false);
   const [result, setResult] = useState<string | null>(null); // data url «ПОСЛЕ» (обычный режим)
@@ -46,10 +53,8 @@ export default function Visualizer({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const toggleDecor = (id: string) =>
-    onDecorIds(
-      decorIds.includes(id)
-        ? decorIds.filter((x) => x !== id)
-        : [...decorIds, id]
+    setDecorIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
 
   // Сколько фото-референсов уйдёт в Gemini (та же логика бюджета, что на сервере):
@@ -397,7 +402,7 @@ export default function Visualizer({
               {/* «Без цоколя» — всегда */}
               <button
                 type="button"
-                onClick={() => onFoundationId(null)}
+                onClick={() => setFoundationId(null)}
                 className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
                   foundationId === null
                     ? "border-gold ring-2 ring-gold/30"
@@ -421,7 +426,7 @@ export default function Visualizer({
                   <button
                     key={f.id}
                     type="button"
-                    onClick={() => onFoundationId(f.id)}
+                    onClick={() => setFoundationId(f.id)}
                     className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
                       active
                         ? "border-gold ring-2 ring-gold/30"
