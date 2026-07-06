@@ -11,12 +11,21 @@ import { TERMOPANELS } from "@/lib/termopanels";
 import { DECOR, DECOR_CATEGORY_LABEL } from "@/lib/decor";
 import { TEXTURES } from "@/lib/textures";
 import { AMK } from "@/lib/amk";
+import { KLINKER } from "@/lib/klinker";
+import { COLORS } from "@/lib/colors";
 
 // Нормализованная карточка каталога (единый вид для всех категорий).
 type CardItem = { id: string; name: string; image: string; swatch?: string; note?: string };
 
 // key = папка в public/references/<key>/ И параметр для /visualizer?cat=<key>
-const SECTIONS: { key: string; title: string; canVisualize: boolean; items: CardItem[] }[] = [
+// hrefFor — переопределяет ссылку «Визуализировать этим» (напр. форма стен клинкер).
+const SECTIONS: {
+  key: string;
+  title: string;
+  canVisualize: boolean;
+  items: CardItem[];
+  hrefFor?: (id: string) => string;
+}[] = [
   {
     key: "amk",
     // Названия и список генерируются из имён файлов public/references/amk/
@@ -24,6 +33,22 @@ const SECTIONS: { key: string; title: string; canVisualize: boolean; items: Card
     title: "АМК (кирпич)",
     canVisualize: true, // материал стен → /visualizer?cat=amk&id=<id>
     items: AMK.map((a) => ({ id: a.id, name: a.name, image: a.image })),
+  },
+  {
+    key: "klinker",
+    // Форма стен. Список из public/references/klinker/ (lib/klinker.ts).
+    title: "Клинкер (форма стен) · тест форма+цвет",
+    canVisualize: true,
+    // Форма стен → выбор формы клинкера в визуализаторе (цвет выбирается там же).
+    hrefFor: (id) => `/visualizer?wallShape=klinker&id=${id}`,
+    items: KLINKER.map((k) => ({ id: k.id, name: k.name, image: k.image })),
+  },
+  {
+    key: "colors",
+    // Палитра цветов (краска), общая для формы стен и цоколя. Только просмотр.
+    title: "Цвета (краска)",
+    canVisualize: false,
+    items: COLORS.map((c) => ({ id: c.id, name: c.name, image: c.image })),
   },
   {
     key: "termopanels",
@@ -114,7 +139,13 @@ export default function CatalogPage() {
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {s.items.map((item) => (
-                <MaterialCard key={item.id} catKey={s.key} item={item} canVisualize={s.canVisualize} />
+                <MaterialCard
+                  key={item.id}
+                  catKey={s.key}
+                  item={item}
+                  canVisualize={s.canVisualize}
+                  vizHref={s.hrefFor ? s.hrefFor(item.id) : undefined}
+                />
               ))}
             </div>
           )}
@@ -128,10 +159,12 @@ function MaterialCard({
   catKey,
   item,
   canVisualize,
+  vizHref,
 }: {
   catKey: string;
   item: CardItem;
   canVisualize: boolean;
+  vizHref?: string;
 }) {
   const [failed, setFailed] = useState(false);
   const showFallback = failed || !item.image;
@@ -171,7 +204,7 @@ function MaterialCard({
         </p>
         {canVisualize && (
           <Link
-            href={`/visualizer?cat=${catKey}&id=${item.id}`}
+            href={vizHref ?? `/visualizer?cat=${catKey}&id=${item.id}`}
             className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-gold transition hover:text-goldLight"
           >
             Визуализировать этим

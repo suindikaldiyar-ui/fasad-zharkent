@@ -9,6 +9,8 @@ import { getBelt } from "@/lib/belts";
 import { getBracket } from "@/lib/brackets";
 import { getTermopanel } from "@/lib/termopanels";
 import { AMK } from "@/lib/amk";
+import { KLINKER } from "@/lib/klinker";
+import { COLORS } from "@/lib/colors";
 import { getFacadeColor } from "@/lib/facadecolors";
 import { getClientIp, rateLimit } from "@/lib/ratelimit";
 import { MAX_REFERENCE_IMAGES } from "@/lib/constants";
@@ -46,6 +48,11 @@ interface Body {
   bracketId?: string | null; // id кронштейна (null = без кронштейна)
   termopanelId?: string | null; // id термопанельной планки (null = без)
   amkId?: string | null; // id кирпича АМК — материал стен (null = без)
+  // Клинкер (тест форма+цвет): форма и цвет отдельно для стены и цоколя.
+  wallShapeId?: string | null; // форма стены (klinker)
+  wallColorId?: string | null; // цвет стены (colors)
+  plinthShapeId?: string | null; // форма цоколя (klinker)
+  plinthColorId?: string | null; // цвет цоколя (colors)
   comment?: string; // доп. комментарий пользователя
 }
 
@@ -156,6 +163,10 @@ export async function POST(req: NextRequest) {
   const bracketId = cleanId(body.bracketId);
   const termopanelId = cleanId(body.termopanelId);
   const amkId = cleanId(body.amkId);
+  const wallShapeId = cleanId(body.wallShapeId);
+  const wallColorId = cleanId(body.wallColorId);
+  const plinthShapeId = cleanId(body.plinthShapeId);
+  const plinthColorId = cleanId(body.plinthColorId);
   const decorIds = Array.isArray(body.decorIds)
     ? (body.decorIds.map(cleanId).filter(Boolean) as string[])
     : [];
@@ -253,6 +264,20 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Клинкер (тест): форма (klinker/) + цвет (colors/) отдельно для стены и цоколя.
+  const originKl = getOrigin(req);
+  const loadRef = async (
+    folder: string,
+    list: { id: string }[],
+    id: string | null
+  ): Promise<ImageAsset | null> =>
+    id && list.some((x) => x.id === id) ? loadAsset(folder, id, originKl) : null;
+
+  let wallShapeAsset = await loadRef("klinker", KLINKER, wallShapeId);
+  let wallColorAsset = await loadRef("colors", COLORS, wallColorId);
+  let plinthShapeAsset = await loadRef("klinker", KLINKER, plinthShapeId);
+  let plinthColorAsset = await loadRef("colors", COLORS, plinthColorId);
+
   // ── Лимит фото-референсов (анти-галлюцинации) ──
   // Держим не больше MAX_REFERENCE_IMAGES картинок-референсов на запрос.
   // frameSet = 3 картинки, остальные = 1. Что не влезло — обнуляем: тогда ниже
@@ -268,6 +293,16 @@ export async function POST(req: NextRequest) {
   };
   if (termopanelAsset && !takeRef(1)) termopanelAsset = null;
   if (amkAsset && !takeRef(1)) amkAsset = null;
+  // Клинкер: форма+цвет держим ПАРОЙ (если не влезают оба — не шлём ни одного,
+  // иначе роли A/B ломаются). Отдельные (только форма ИЛИ только цвет) — по 1.
+  const takePair = (a: ImageAsset | null, b: ImageAsset | null): [ImageAsset | null, ImageAsset | null] => {
+    if (a && b) return takeRef(2) ? [a, b] : [null, null];
+    if (a) return takeRef(1) ? [a, null] : [null, null];
+    if (b) return takeRef(1) ? [null, b] : [null, null];
+    return [null, null];
+  };
+  [wallShapeAsset, wallColorAsset] = takePair(wallShapeAsset, wallColorAsset);
+  [plinthShapeAsset, plinthColorAsset] = takePair(plinthShapeAsset, plinthColorAsset);
   if (frameSet && !takeRef(3)) frameSet = null;
   if (frameAsset && !takeRef(1)) frameAsset = null;
   if (foundationAsset && !takeRef(1)) foundationAsset = null;
@@ -329,6 +364,27 @@ export async function POST(req: NextRequest) {
   if (amkAsset) {
     amkIndex = ++imgCount; // референс материала стен (кирпич АМК)
     imageParts.push({ inline_data: { mime_type: amkAsset.mimeType, data: amkAsset.data } });
+  }
+  // Клинкер: форма+цвет для стены и цоколя (каждое — отдельная картинка).
+  let wallShapeIndex = 0;
+  if (wallShapeAsset) {
+    wallShapeIndex = ++imgCount;
+    imageParts.push({ inline_data: { mime_type: wallShapeAsset.mimeType, data: wallShapeAsset.data } });
+  }
+  let wallColorIndex = 0;
+  if (wallColorAsset) {
+    wallColorIndex = ++imgCount;
+    imageParts.push({ inline_data: { mime_type: wallColorAsset.mimeType, data: wallColorAsset.data } });
+  }
+  let plinthShapeIndex = 0;
+  if (plinthShapeAsset) {
+    plinthShapeIndex = ++imgCount;
+    imageParts.push({ inline_data: { mime_type: plinthShapeAsset.mimeType, data: plinthShapeAsset.data } });
+  }
+  let plinthColorIndex = 0;
+  if (plinthColorAsset) {
+    plinthColorIndex = ++imgCount;
+    imageParts.push({ inline_data: { mime_type: plinthColorAsset.mimeType, data: plinthColorAsset.data } });
   }
 
   // Базовый промпт: IMAGE 1 = дом. Материал стен задаётся термопанелью (если выбрана).
@@ -485,6 +541,50 @@ export async function POST(req: NextRequest) {
       `\n\nCover all the plaster/wall surfaces of the house with AMK decorative brick facade ` +
       `cladding. Apply it as the main wall facade cladding at realistic scale. Keep windows, ` +
       `roof, doors and surroundings unchanged.`;
+  }
+
+  // ── Клинкер (ТЕСТ): форма (REFERENCE A) + цвет (REFERENCE B), отдельно стена/цоколь.
+  // Роли референсов чётко разделены; structural lock НЕ трогаем.
+  if (wallShapeAsset && wallColorAsset) {
+    prompt +=
+      `\n\nWALL cladding — TWO references define it:\n` +
+      `REFERENCE A = IMAGE ${wallShapeIndex} = panel SHAPE/PATTERN of the wall material ` +
+      `(take ONLY the brick/panel geometry and relief from A, ignore its color). ` +
+      `REFERENCE B = IMAGE ${wallColorIndex} = COLOR/finish to apply to that panel ` +
+      `(take ONLY the color and surface texture from B, and paint the panel shape from A with it). ` +
+      `Do NOT copy the background, layout or borders of B — B is only a color swatch. ` +
+      `Apply this as the MAIN WALL cladding across the ENTIRE facade of IMAGE 1 at realistic ` +
+      `scale. Keep windows, roof, doors, balcony, stairs and surroundings exactly as in IMAGE 1.`;
+  } else if (wallShapeAsset) {
+    prompt +=
+      `\n\nCover the ENTIRE facade walls of IMAGE 1 with the panel material shown in ` +
+      `IMAGE ${wallShapeIndex} (its shape, relief and appearance), at realistic scale. ` +
+      `Keep windows, roof, doors and surroundings unchanged.`;
+  } else if (wallColorAsset) {
+    prompt +=
+      `\n\nPaint the facade walls of IMAGE 1 in the color/finish shown in IMAGE ${wallColorIndex} ` +
+      `(take ONLY its color and surface texture, ignore its background/borders). Keep the wall ` +
+      `relief, windows, roof, doors and surroundings unchanged.`;
+  }
+
+  if (plinthShapeAsset && plinthColorAsset) {
+    prompt +=
+      `\n\nPLINTH (base strip at the very bottom of the walls, ~0.4-0.5 m high) — TWO references:\n` +
+      `REFERENCE A = IMAGE ${plinthShapeIndex} = panel SHAPE/PATTERN of the plinth material ` +
+      `(take ONLY the brick/panel geometry and relief from A, ignore its color). ` +
+      `REFERENCE B = IMAGE ${plinthColorIndex} = COLOR/finish to apply to that panel ` +
+      `(take ONLY the color and surface texture from B, and paint the panel shape from A with it). ` +
+      `Do NOT copy the background, layout or borders of B — B is only a color swatch. ` +
+      `Apply this ONLY to the narrow plinth strip at the bottom of the WALLS, with a crisp top ` +
+      `edge. Do NOT apply it to the ground, pavement, walkway or any horizontal surface.`;
+  } else if (plinthShapeAsset) {
+    prompt +=
+      `\n\nClad ONLY the plinth strip (~0.4-0.5 m) at the bottom of the walls with the panel ` +
+      `material shown in IMAGE ${plinthShapeIndex}, crisp top edge. Do NOT touch the ground.`;
+  } else if (plinthColorAsset) {
+    prompt +=
+      `\n\nPaint ONLY the plinth strip (~0.4-0.5 m) at the bottom of the walls in the color shown ` +
+      `in IMAGE ${plinthColorIndex} (take ONLY its color, ignore its background). Do NOT touch the ground.`;
   }
 
   // Доп. инструкции пользователя

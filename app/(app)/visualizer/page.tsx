@@ -33,7 +33,11 @@ function mapInitial(cat: string | null, id: string | null): VisualizerInitial | 
 
 function VisualizerWithPreselect() {
   const sp = useSearchParams();
-  const initial = mapInitial(sp.get("cat"), sp.get("id"));
+  // Форма стен (клинкер) приходит через ?wallShape=klinker&id=<id>.
+  const wallShape = sp.get("wallShape");
+  const initial: VisualizerInitial | undefined = wallShape
+    ? { wallShapeId: sp.get("id") ?? wallShape }
+    : mapInitial(sp.get("cat"), sp.get("id"));
   return <Visualizer initial={initial} />;
 }
 

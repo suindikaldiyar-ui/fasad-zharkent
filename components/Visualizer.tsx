@@ -9,6 +9,8 @@ import { BELTS } from "@/lib/belts";
 import { BRACKETS } from "@/lib/brackets";
 import { TERMOPANELS } from "@/lib/termopanels";
 import { AMK } from "@/lib/amk";
+import { KLINKER } from "@/lib/klinker";
+import { COLORS } from "@/lib/colors";
 import { FACADE_COLORS } from "@/lib/facadecolors";
 import { compressImage, type CompressedImage } from "@/lib/image";
 import { MAX_REFERENCE_IMAGES } from "@/lib/constants";
@@ -22,6 +24,11 @@ export interface VisualizerInitial {
   bracketId?: string | null;
   termopanelId?: string | null;
   amkId?: string | null;
+  // Клинкер (тест форма+цвет): форма и цвет отдельно для стены и цоколя.
+  wallShapeId?: string | null;
+  wallColorId?: string | null;
+  plinthShapeId?: string | null;
+  plinthColorId?: string | null;
   facadeColorId?: string;
   decorIds?: string[];
 }
@@ -43,6 +50,11 @@ export default function Visualizer({ initial }: Props) {
   const [bracketId, setBracketId] = useState<string | null>(initial?.bracketId ?? null);
   const [termopanelId, setTermopanelId] = useState<string | null>(initial?.termopanelId ?? null);
   const [amkId, setAmkId] = useState<string | null>(initial?.amkId ?? null);
+  // Клинкер (тест): форма + цвет отдельно для стены и цоколя (независимо).
+  const [wallShapeId, setWallShapeId] = useState<string | null>(initial?.wallShapeId ?? null);
+  const [wallColorId, setWallColorId] = useState<string | null>(initial?.wallColorId ?? null);
+  const [plinthShapeId, setPlinthShapeId] = useState<string | null>(initial?.plinthShapeId ?? null);
+  const [plinthColorId, setPlinthColorId] = useState<string | null>(initial?.plinthColorId ?? null);
   const [comment, setComment] = useState("");
   const [compareBrackets, setCompareBrackets] = useState(false);
   const [result, setResult] = useState<string | null>(null); // data url «ПОСЛЕ» (обычный режим)
@@ -72,7 +84,12 @@ export default function Visualizer({ initial }: Props) {
     (beltId ? 1 : 0) +
     (bracketId ? 1 : 0) +
     (termopanelId ? 1 : 0) +
-    (amkId ? 1 : 0);
+    (amkId ? 1 : 0) +
+    // Клинкер: форма стены +1, цвет стены +1, форма цоколя +1, цвет цоколя +1
+    (wallShapeId ? 1 : 0) +
+    (wallColorId ? 1 : 0) +
+    (plinthShapeId ? 1 : 0) +
+    (plinthColorId ? 1 : 0);
   const overRefLimit = photoRefCount > MAX_REFERENCE_IMAGES;
 
   async function handleFile(file: File | undefined | null) {
@@ -111,6 +128,10 @@ export default function Visualizer({ initial }: Props) {
         bracketId: bId,
         termopanelId,
         amkId,
+        wallShapeId,
+        wallColorId,
+        plinthShapeId,
+        plinthColorId,
         comment: comment.trim(),
       }),
     });
@@ -778,6 +799,70 @@ export default function Visualizer({ initial }: Props) {
             )}
           </div>
 
+          {/* Клинкер — ТЕСТ: форма + цвет отдельными референсами. Стена и цоколь независимо. */}
+          <div className="rounded-xl border border-gold/30 bg-canvas/40 p-3.5">
+            <p className="text-sm font-bold text-ink">
+              Клинкер{" "}
+              <span className="font-normal text-muted">— тест: форма + цвет</span>
+            </p>
+            <p className="mt-1 text-[11px] leading-snug text-muted">
+              Форма = рельеф панели, цвет = краска. Стена и цоколь выбираются
+              независимо. Каждый выбор = 1 фото-референс (в лимите {MAX_REFERENCE_IMAGES}).
+            </p>
+
+            {/* СТЕНА */}
+            <p className="mt-3 text-xs font-bold uppercase tracking-wide text-gold">Стена</p>
+            <div className="mt-1.5">
+              <p className="mb-1.5 text-xs font-semibold text-ink">Форма стены</p>
+              <RefPicker
+                items={KLINKER}
+                selectedId={wallShapeId}
+                onSelect={setWallShapeId}
+                emptyLabel="Без формы"
+                failedImg={failedImg}
+                onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
+              />
+            </div>
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs font-semibold text-ink">Цвет стены</p>
+              <RefPicker
+                items={COLORS}
+                selectedId={wallColorId}
+                onSelect={setWallColorId}
+                emptyLabel="Без цвета"
+                cols={4}
+                failedImg={failedImg}
+                onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
+              />
+            </div>
+
+            {/* ЦОКОЛЬ */}
+            <p className="mt-4 text-xs font-bold uppercase tracking-wide text-gold">Цоколь</p>
+            <div className="mt-1.5">
+              <p className="mb-1.5 text-xs font-semibold text-ink">Форма цоколя</p>
+              <RefPicker
+                items={KLINKER}
+                selectedId={plinthShapeId}
+                onSelect={setPlinthShapeId}
+                emptyLabel="Без формы"
+                failedImg={failedImg}
+                onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
+              />
+            </div>
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs font-semibold text-ink">Цвет цоколя</p>
+              <RefPicker
+                items={COLORS}
+                selectedId={plinthColorId}
+                onSelect={setPlinthColorId}
+                emptyLabel="Без цвета"
+                cols={4}
+                failedImg={failedImg}
+                onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
+              />
+            </div>
+          </div>
+
           {/* Угловые колонны (по фото-референсу) */}
           <div>
             <p className="mb-2 text-sm font-semibold text-ink">Угловые колонны</p>
@@ -1302,6 +1387,75 @@ function ComingSoon() {
       <span className="text-xs font-medium text-muted">
         Скоро — материалы добавляются
       </span>
+    </div>
+  );
+}
+
+// Универсальный выбор референса (форма / цвет): сетка карточек {id,name,image}.
+function RefPicker({
+  items,
+  selectedId,
+  onSelect,
+  emptyLabel,
+  failedImg,
+  onFail,
+  cols = 2,
+}: {
+  items: { id: string; name: string; image: string }[];
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+  emptyLabel: string;
+  failedImg: Record<string, boolean>;
+  onFail: (image: string) => void;
+  cols?: 2 | 4;
+}) {
+  if (items.length === 0) return <ComingSoon />;
+  return (
+    <div className={cols === 4 ? "grid grid-cols-4 gap-2" : "grid grid-cols-2 gap-2"}>
+      {/* «Без …» — всегда */}
+      <button
+        type="button"
+        onClick={() => onSelect(null)}
+        className={`flex items-center justify-center rounded-lg border p-2 text-center text-[11px] font-medium leading-tight transition ${
+          selectedId === null
+            ? "border-gold ring-2 ring-gold/30 text-ink"
+            : "border-line text-muted hover:border-gold/40"
+        }`}
+      >
+        {emptyLabel}
+      </button>
+
+      {items.map((it) => {
+        const active = it.id === selectedId;
+        return (
+          <button
+            key={it.id}
+            type="button"
+            title={it.name}
+            onClick={() => onSelect(it.id)}
+            className={`flex flex-col items-center gap-1 rounded-lg border p-1.5 transition ${
+              active ? "border-gold ring-2 ring-gold/30" : "border-line hover:border-gold/40"
+            }`}
+          >
+            {failedImg[it.image] ? (
+              <span className="flex aspect-square w-full items-center justify-center rounded border border-line text-center text-[9px] text-muted">
+                нет фото
+              </span>
+            ) : (
+              <img
+                src={it.image}
+                alt={it.name}
+                loading="lazy"
+                onError={() => onFail(it.image)}
+                className="aspect-square w-full rounded border border-black/10 object-cover"
+              />
+            )}
+            <span className="block w-full truncate text-center text-[10px] font-medium leading-tight text-ink">
+              {it.name}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
