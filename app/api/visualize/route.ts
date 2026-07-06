@@ -62,12 +62,16 @@ const RUST_SCALE =
 // Мелкий плотный паркетно-лабиринтный узор — ЛАБИРИНТ (тонкие маленькие кирпичики).
 const LABIRINT_SCALE =
   ` Render LABIRINT panels as a DENSE, FINE interlocking parquet/maze pattern made of SMALL THIN ` +
-  `brick-sticks (each about ~200mm × ~50mm, narrow elongated pieces). The little sticks are laid ` +
+  `brick-sticks (each about ~150mm × ~40mm, narrow small pieces). The little sticks are laid ` +
   `alternately VERTICALLY and HORIZONTALLY, interlocking at right angles to form a woven labyrinth/parquet ` +
-  `layout. Elements are SMALL and FREQUENT — many little sticks per wall, NOT large blocks, NOT big tiles. ` +
+  `layout. MANY small sticks packed densely across the wall, brick-scale size — each stick proportionally ` +
+  `SMALL relative to the windows and doors in IMAGE 1. Many rows, fine and dense, NOT enlarged. ` +
+  `Elements are SMALL and FREQUENT — many little sticks per wall, NOT large blocks, NOT big tiles. ` +
   `Each stick has a thin chamfered edge and fine recessed joint with subtle shadow. Keep the pieces small ` +
   `and proportional to windows/doors in IMAGE 1. Follow the exact interlocking arrangement from the SHAPE ` +
-  `reference. Absolutely do NOT render labirint as large blocks — it is a fine small-element weave.`;
+  `reference. Absolutely do NOT render labirint as large blocks — it is a fine small-element weave. ` +
+  `Reproduce the labyrinth weave EXACTLY as in the shape reference — the specific alternating ` +
+  `vertical/horizontal stick arrangement shown there, not a generic approximation.`;
 
 // Масштаб по форме: rust → умеренные блоки; labirint → асимметричный узор;
 // klinker/3d-panel (и всё остальное) → кирпичный.
@@ -86,6 +90,14 @@ const WALL_RELIEF_3D =
   `its beveled frame and recessed centre with realistic self-shadowing under the scene's lighting. ` +
   `Keep the brick-scale small element size while giving each small element its own pronounced bevel and ` +
   `volume — small elements, but every one clearly three-dimensional.`;
+
+// Точное копирование узора формы (все формы, критично для лабиринта).
+const SHAPE_COPY_EXACT =
+  ` CRITICAL: Copy the panel pattern EXACTLY as shown in the SHAPE reference image — the precise tile ` +
+  `arrangement, proportions, orientation and interlocking layout. Do NOT invent, simplify or approximate ` +
+  `your own version of the pattern. Replicate the EXACT geometry from the reference: same tile sizes, ` +
+  `same weaving directions, same joint positions. The result must match the reference pattern one-to-one, ` +
+  `only rescaled to fit the wall and recolored.`;
 
 // Предупреждение при старте, если ключ не задан (билд не роняем).
 if (!process.env.GEMINI_API_KEY) {
@@ -638,6 +650,7 @@ export async function POST(req: NextRequest) {
   if (wallShapeAsset) {
     prompt +=
       scaleForShape(wallShape) +
+      SHAPE_COPY_EXACT +
       WALL_RELIEF_3D +
       (wallColorAsset ? CLINKER_TEXTURE_B : "") +
       CLINKER_PHOTOREAL;
