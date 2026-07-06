@@ -33,6 +33,10 @@ export interface VisualizerInitial {
   decorIds?: string[];
 }
 
+// Тип материала для стены / цоколя (одновременно активен ОДИН тип).
+type WallType = "none" | "termopanel" | "amk" | "panels";
+type PlinthType = "none" | "panels" | "foundation";
+
 interface Props {
   initial?: VisualizerInitial;
 }
@@ -55,6 +59,23 @@ export default function Visualizer({ initial }: Props) {
   const [wallColorId, setWallColorId] = useState<string | null>(initial?.wallColorId ?? null);
   const [plinthShapeId, setPlinthShapeId] = useState<string | null>(initial?.plinthShapeId ?? null);
   const [plinthColorId, setPlinthColorId] = useState<string | null>(initial?.plinthColorId ?? null);
+  // Активный ТИП материала стены/цоколя (стена и цоколь независимы). Из предвыбора — авто.
+  const [wallType, setWallType] = useState<WallType>(
+    initial?.termopanelId
+      ? "termopanel"
+      : initial?.amkId
+      ? "amk"
+      : initial?.wallShapeId || initial?.wallColorId
+      ? "panels"
+      : "none"
+  );
+  const [plinthType, setPlinthType] = useState<PlinthType>(
+    initial?.plinthShapeId || initial?.plinthColorId
+      ? "panels"
+      : initial?.foundationId
+      ? "foundation"
+      : "none"
+  );
   const [comment, setComment] = useState("");
   const [compareBrackets, setCompareBrackets] = useState(false);
   const [result, setResult] = useState<string | null>(null); // data url «ПОСЛЕ» (обычный режим)
@@ -72,24 +93,59 @@ export default function Visualizer({ initial }: Props) {
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
 
+  // Переключение типа: активен один тип, поля остальных чистим →
+  // в запрос уходят ТОЛЬКО поля выбранного типа. Стена и цоколь независимо.
+  function selectWallType(t: WallType) {
+    setWallType(t);
+    if (t !== "termopanel") setTermopanelId(null);
+    if (t !== "amk") setAmkId(null);
+    if (t !== "panels") {
+      setWallShapeId(null);
+      setWallColorId(null);
+    }
+  }
+  function selectPlinthType(t: PlinthType) {
+    setPlinthType(t);
+    if (t !== "panels") {
+      setPlinthShapeId(null);
+      setPlinthColorId(null);
+    }
+    if (t !== "foundation") setFoundationId(null);
+  }
+
   // Сколько фото-референсов уйдёт в Gemini (та же логика бюджета, что на сервере):
   // комплект обрамления = 3 фото, остальные материалы = 1. Цвет фасада и декор —
   // текстовые подсказки, в бюджет фото не входят.
   const selectedFrame = FRAMES.find((f) => f.id === frameId);
   const frameCost = selectedFrame ? (selectedFrame.setImages ? 3 : 1) : 0;
+  // Материал стены/цоколя — считаем ТОЛЬКО активный тип (термопанель=1, АМК=1, панель=форма+цвет=2).
+  const wallRefs =
+    wallType === "termopanel"
+      ? termopanelId
+        ? 1
+        : 0
+      : wallType === "amk"
+      ? amkId
+        ? 1
+        : 0
+      : wallType === "panels"
+      ? (wallShapeId ? 1 : 0) + (wallColorId ? 1 : 0)
+      : 0;
+  const plinthRefs =
+    plinthType === "panels"
+      ? (plinthShapeId ? 1 : 0) + (plinthColorId ? 1 : 0)
+      : plinthType === "foundation"
+      ? foundationId
+        ? 1
+        : 0
+      : 0;
   const photoRefCount =
-    (foundationId ? 1 : 0) +
     frameCost +
     (columnId ? 1 : 0) +
     (beltId ? 1 : 0) +
     (bracketId ? 1 : 0) +
-    (termopanelId ? 1 : 0) +
-    (amkId ? 1 : 0) +
-    // Клинкер: форма стены +1, цвет стены +1, форма цоколя +1, цвет цоколя +1
-    (wallShapeId ? 1 : 0) +
-    (wallColorId ? 1 : 0) +
-    (plinthShapeId ? 1 : 0) +
-    (plinthColorId ? 1 : 0);
+    wallRefs +
+    plinthRefs;
   const overRefLimit = photoRefCount > MAX_REFERENCE_IMAGES;
 
   async function handleFile(file: File | undefined | null) {
@@ -118,7 +174,6 @@ export default function Visualizer({ initial }: Props) {
       body: JSON.stringify({
         image: source!.base64,
         mimeType: source!.mimeType,
-        foundationId,
         decorIds,
         frameId,
         frameColor,
@@ -126,12 +181,15 @@ export default function Visualizer({ initial }: Props) {
         columnId,
         beltId,
         bracketId: bId,
-        termopanelId,
-        amkId,
-        wallShapeId,
-        wallColorId,
-        plinthShapeId,
-        plinthColorId,
+        // Материал СТЕНЫ — только поля активного типа (остальные null).
+        termopanelId: wallType === "termopanel" ? termopanelId : null,
+        amkId: wallType === "amk" ? amkId : null,
+        wallShapeId: wallType === "panels" ? wallShapeId : null,
+        wallColorId: wallType === "panels" ? wallColorId : null,
+        // Материал ЦОКОЛЯ — только поля активного типа (независимо от стены).
+        plinthShapeId: plinthType === "panels" ? plinthShapeId : null,
+        plinthColorId: plinthType === "panels" ? plinthColorId : null,
+        foundationId: plinthType === "foundation" ? foundationId : null,
         comment: comment.trim(),
       }),
     });
@@ -421,70 +479,6 @@ export default function Visualizer({ initial }: Props) {
             </div>
           </div>
 
-          {/* Выбор цоколя / фундамента */}
-          <div>
-            <p className="mb-2 text-sm font-semibold text-ink">Цоколь / фундамент</p>
-            <div className="grid grid-cols-2 gap-2">
-              {/* «Без цоколя» — всегда */}
-              <button
-                type="button"
-                onClick={() => setFoundationId(null)}
-                className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
-                  foundationId === null
-                    ? "border-gold ring-2 ring-gold/30"
-                    : "border-line hover:border-gold/40"
-                }`}
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line text-muted">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="m5 5 14 14" />
-                  </svg>
-                </span>
-                <span className="text-xs font-medium leading-tight text-ink">
-                  Без цоколя
-                </span>
-              </button>
-
-              {FOUNDATIONS.map((f) => {
-                const active = f.id === foundationId;
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => setFoundationId(f.id)}
-                    className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
-                      active
-                        ? "border-gold ring-2 ring-gold/30"
-                        : "border-line hover:border-gold/40"
-                    }`}
-                  >
-                    {failedImg[f.image] ? (
-                      <span
-                        className="h-8 w-8 shrink-0 rounded-lg border border-black/10"
-                        style={{ background: f.swatch }}
-                      />
-                    ) : (
-                      <img
-                        src={f.image}
-                        alt={f.name}
-                        loading="lazy"
-                        onError={() =>
-                          setFailedImg((p) => ({ ...p, [f.image]: true }))
-                        }
-                        className="h-8 w-8 shrink-0 rounded-lg border border-black/10 object-cover"
-                      />
-                    )}
-                    <span className="text-xs font-medium leading-tight text-ink">
-                      {f.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            {FOUNDATIONS.length === 0 && <ComingSoon />}
-          </div>
-
           {/* Выбор декора (мультивыбор) */}
           <div>
             <p className="mb-2 text-sm font-semibold text-ink">
@@ -653,213 +647,132 @@ export default function Visualizer({ initial }: Props) {
             </div>
           </div>
 
-          {/* Термопанель (планки вокруг окон, по фото-референсу) */}
-          <div>
-            <p className="mb-2 text-sm font-semibold text-ink">Термопанель</p>
-            {TERMOPANELS.length === 0 ? (
-              <ComingSoon />
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {/* «Без термопанели» — всегда */}
-                <button
-                  type="button"
-                  onClick={() => setTermopanelId(null)}
-                  className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
-                    termopanelId === null
-                      ? "border-gold ring-2 ring-gold/30"
-                      : "border-line hover:border-gold/40"
-                  }`}
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-muted">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="9" />
-                      <path d="m5 5 14 14" />
-                    </svg>
-                  </span>
-                  <span className="text-xs font-medium leading-tight text-ink">
-                    Без термопанели
-                  </span>
-                </button>
-
-                {TERMOPANELS.map((t) => {
-                  const active = t.id === termopanelId;
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setTermopanelId(t.id)}
-                      className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
-                        active
-                          ? "border-gold ring-2 ring-gold/30"
-                          : "border-line hover:border-gold/40"
-                      }`}
-                    >
-                      {failedImg[t.image] ? (
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-muted">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="9" cy="9" r="2" />
-                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                          </svg>
-                        </span>
-                      ) : (
-                        <img
-                          src={t.image}
-                          alt={t.name}
-                          loading="lazy"
-                          onError={() =>
-                            setFailedImg((p) => ({ ...p, [t.image]: true }))
-                          }
-                          className="h-8 w-8 shrink-0 rounded-lg border border-black/10 object-cover"
-                        />
-                      )}
-                      <span className="min-w-0">
-                        <span className="block truncate text-xs font-medium leading-tight text-ink">
-                          {t.name}
-                        </span>
-                        <span className="block text-[10px] text-muted">{t.size}</span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+          {/* ── Материал стен: сначала ТИП, потом только его галерея ── */}
+          <div className="rounded-xl border border-line bg-canvas/40 p-3.5">
+            <p className="mb-2.5 text-sm font-bold text-ink">Материал стен</p>
+            <TypeTabs
+              value={wallType}
+              onChange={selectWallType}
+              options={[
+                { id: "none", label: "Нет" },
+                { id: "termopanel", label: "Термопанель" },
+                { id: "amk", label: "АМК кирпич" },
+                { id: "panels", label: "Панели" },
+              ]}
+            />
+            <div className="mt-3">
+              {wallType === "none" && (
+                <p className="text-xs text-muted">Материал стен не выбран.</p>
+              )}
+              {wallType === "termopanel" && (
+                <MaterialTiles
+                  items={TERMOPANELS}
+                  selectedId={termopanelId}
+                  onSelect={setTermopanelId}
+                  emptyLabel="Без термопанели"
+                  failedImg={failedImg}
+                  onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
+                />
+              )}
+              {wallType === "amk" && (
+                <MaterialTiles
+                  items={AMK}
+                  selectedId={amkId}
+                  onSelect={setAmkId}
+                  emptyLabel="Без АМК"
+                  failedImg={failedImg}
+                  onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
+                />
+              )}
+              {wallType === "panels" && (
+                <div className="space-y-3">
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-ink">Форма стены</p>
+                    <RefPicker
+                      items={PANELS}
+                      selectedId={wallShapeId}
+                      onSelect={setWallShapeId}
+                      emptyLabel="Без формы"
+                      failedImg={failedImg}
+                      onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
+                    />
+                  </div>
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-ink">Цвет стены</p>
+                    <RefPicker
+                      items={COLORS}
+                      selectedId={wallColorId}
+                      onSelect={setWallColorId}
+                      emptyLabel="Без цвета"
+                      cols={4}
+                      failedImg={failedImg}
+                      onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
+                    />
+                  </div>
+                  <p className="text-[11px] leading-snug text-muted">
+                    Форма = рельеф панели, цвет = краска (2 референса).
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* АМК (кирпич) — материал стен, тот же принцип, что термопанель */}
-          <div>
-            <p className="mb-2 text-sm font-semibold text-ink">
-              АМК (кирпич){" "}
-              <span className="font-normal text-muted">— материал стен</span>
-            </p>
-            {AMK.length === 0 ? (
-              <ComingSoon />
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {/* «Без АМК» — всегда */}
-                <button
-                  type="button"
-                  onClick={() => setAmkId(null)}
-                  className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
-                    amkId === null
-                      ? "border-gold ring-2 ring-gold/30"
-                      : "border-line hover:border-gold/40"
-                  }`}
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-muted">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="9" />
-                      <path d="m5 5 14 14" />
-                    </svg>
-                  </span>
-                  <span className="text-xs font-medium leading-tight text-ink">
-                    Без АМК
-                  </span>
-                </button>
-
-                {AMK.map((a) => {
-                  const active = a.id === amkId;
-                  return (
-                    <button
-                      key={a.id}
-                      type="button"
-                      onClick={() => setAmkId(a.id)}
-                      className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
-                        active
-                          ? "border-gold ring-2 ring-gold/30"
-                          : "border-line hover:border-gold/40"
-                      }`}
-                    >
-                      {failedImg[a.image] ? (
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-muted">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="9" cy="9" r="2" />
-                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                          </svg>
-                        </span>
-                      ) : (
-                        <img
-                          src={a.image}
-                          alt={a.name}
-                          loading="lazy"
-                          onError={() =>
-                            setFailedImg((p) => ({ ...p, [a.image]: true }))
-                          }
-                          className="h-8 w-8 shrink-0 rounded-lg border border-black/10 object-cover"
-                        />
-                      )}
-                      <span className="block truncate text-xs font-medium leading-tight text-ink">
-                        {a.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Панели — форма + цвет отдельными референсами. Стена и цоколь независимо. */}
-          <div className="rounded-xl border border-gold/30 bg-canvas/40 p-3.5">
-            <p className="text-sm font-bold text-ink">
-              Панели{" "}
-              <span className="font-normal text-muted">— форма + цвет</span>
-            </p>
-            <p className="mt-1 text-[11px] leading-snug text-muted">
-              Форма = рельеф панели, цвет = краска. Стена и цоколь выбираются
-              независимо. Каждый выбор = 1 фото-референс (в лимите {MAX_REFERENCE_IMAGES}).
-            </p>
-
-            {/* СТЕНА */}
-            <p className="mt-3 text-xs font-bold uppercase tracking-wide text-gold">Стена</p>
-            <div className="mt-1.5">
-              <p className="mb-1.5 text-xs font-semibold text-ink">Форма стены</p>
-              <RefPicker
-                items={PANELS}
-                selectedId={wallShapeId}
-                onSelect={setWallShapeId}
-                emptyLabel="Без формы"
-                failedImg={failedImg}
-                onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
-              />
-            </div>
+          {/* ── Материал цоколя: независимо от стены, сначала ТИП ── */}
+          <div className="rounded-xl border border-line bg-canvas/40 p-3.5">
+            <p className="mb-2.5 text-sm font-bold text-ink">Материал цоколя</p>
+            <TypeTabs
+              value={plinthType}
+              onChange={selectPlinthType}
+              options={[
+                { id: "none", label: "Без цоколя" },
+                { id: "panels", label: "Панели" },
+                { id: "foundation", label: "Цоколь-плитка" },
+              ]}
+            />
             <div className="mt-3">
-              <p className="mb-1.5 text-xs font-semibold text-ink">Цвет стены</p>
-              <RefPicker
-                items={COLORS}
-                selectedId={wallColorId}
-                onSelect={setWallColorId}
-                emptyLabel="Без цвета"
-                cols={4}
-                failedImg={failedImg}
-                onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
-              />
-            </div>
-
-            {/* ЦОКОЛЬ */}
-            <p className="mt-4 text-xs font-bold uppercase tracking-wide text-gold">Цоколь</p>
-            <div className="mt-1.5">
-              <p className="mb-1.5 text-xs font-semibold text-ink">Форма цоколя</p>
-              <RefPicker
-                items={PANELS}
-                selectedId={plinthShapeId}
-                onSelect={setPlinthShapeId}
-                emptyLabel="Без формы"
-                failedImg={failedImg}
-                onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
-              />
-            </div>
-            <div className="mt-3">
-              <p className="mb-1.5 text-xs font-semibold text-ink">Цвет цоколя</p>
-              <RefPicker
-                items={COLORS}
-                selectedId={plinthColorId}
-                onSelect={setPlinthColorId}
-                emptyLabel="Без цвета"
-                cols={4}
-                failedImg={failedImg}
-                onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
-              />
+              {plinthType === "none" && (
+                <p className="text-xs text-muted">Цоколь без отделки.</p>
+              )}
+              {plinthType === "panels" && (
+                <div className="space-y-3">
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-ink">Форма цоколя</p>
+                    <RefPicker
+                      items={PANELS}
+                      selectedId={plinthShapeId}
+                      onSelect={setPlinthShapeId}
+                      emptyLabel="Без формы"
+                      failedImg={failedImg}
+                      onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
+                    />
+                  </div>
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-ink">Цвет цоколя</p>
+                    <RefPicker
+                      items={COLORS}
+                      selectedId={plinthColorId}
+                      onSelect={setPlinthColorId}
+                      emptyLabel="Без цвета"
+                      cols={4}
+                      failedImg={failedImg}
+                      onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
+                    />
+                  </div>
+                  <p className="text-[11px] leading-snug text-muted">
+                    Форма = рельеф панели цоколя, цвет = краска (2 референса).
+                  </p>
+                </div>
+              )}
+              {plinthType === "foundation" && (
+                <MaterialTiles
+                  items={FOUNDATIONS}
+                  selectedId={foundationId}
+                  onSelect={setFoundationId}
+                  emptyLabel="Без плитки"
+                  failedImg={failedImg}
+                  onFail={(img) => setFailedImg((p) => ({ ...p, [img]: true }))}
+                />
+              )}
             </div>
           </div>
 
@@ -1452,6 +1365,125 @@ function RefPicker({
             )}
             <span className="block w-full truncate text-center text-[10px] font-medium leading-tight text-ink">
               {it.name}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Табы выбора типа материала. Активный — жёлтый (тёмный текст), как на сайте.
+function TypeTabs<T extends string>({
+  value,
+  onChange,
+  options,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: { id: T; label: string }[];
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((o) => {
+        const active = value === o.id;
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(o.id)}
+            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+              active
+                ? "border-gold bg-gold text-stone"
+                : "border-line text-muted hover:border-gold/40 hover:text-ink"
+            }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Сетка карточек материала (термопанель / АМК / цоколь-плитка): фото + название,
+// swatch/иконка при отсутствии фото, кнопка «Без …». Одиночный выбор (1 референс).
+function MaterialTiles({
+  items,
+  selectedId,
+  onSelect,
+  emptyLabel,
+  failedImg,
+  onFail,
+}: {
+  items: { id: string; name: string; image: string; size?: string; swatch?: string }[];
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+  emptyLabel: string;
+  failedImg: Record<string, boolean>;
+  onFail: (image: string) => void;
+}) {
+  if (items.length === 0) return <ComingSoon />;
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        type="button"
+        onClick={() => onSelect(null)}
+        className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
+          selectedId === null
+            ? "border-gold ring-2 ring-gold/30"
+            : "border-line hover:border-gold/40"
+        }`}
+      >
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-muted">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="9" />
+            <path d="m5 5 14 14" />
+          </svg>
+        </span>
+        <span className="text-xs font-medium leading-tight text-ink">{emptyLabel}</span>
+      </button>
+
+      {items.map((it) => {
+        const active = it.id === selectedId;
+        return (
+          <button
+            key={it.id}
+            type="button"
+            onClick={() => onSelect(it.id)}
+            className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
+              active ? "border-gold ring-2 ring-gold/30" : "border-line hover:border-gold/40"
+            }`}
+          >
+            {failedImg[it.image] ? (
+              it.swatch ? (
+                <span
+                  className="h-8 w-8 shrink-0 rounded-lg border border-black/10"
+                  style={{ background: it.swatch }}
+                />
+              ) : (
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-muted">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="9" cy="9" r="2" />
+                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                  </svg>
+                </span>
+              )
+            ) : (
+              <img
+                src={it.image}
+                alt={it.name}
+                loading="lazy"
+                onError={() => onFail(it.image)}
+                className="h-8 w-8 shrink-0 rounded-lg border border-black/10 object-cover"
+              />
+            )}
+            <span className="min-w-0">
+              <span className="block truncate text-xs font-medium leading-tight text-ink">
+                {it.name}
+              </span>
+              {it.size && <span className="block text-[10px] text-muted">{it.size}</span>}
             </span>
           </button>
         );
