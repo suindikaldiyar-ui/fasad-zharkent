@@ -603,13 +603,26 @@ export async function POST(req: NextRequest) {
   if (plinthShapeAsset && plinthColorAsset) {
     prompt +=
       `\n\nPLINTH (base strip at the very bottom of the walls, ~0.4-0.5 m high) — TWO references:\n` +
-      `REFERENCE A = IMAGE ${plinthShapeIndex} = panel SHAPE/PATTERN of the plinth material ` +
-      `(take ONLY the brick/panel geometry and relief from A, ignore its color). ` +
-      `REFERENCE B = IMAGE ${plinthColorIndex} = COLOR/finish to apply to that panel ` +
-      `(take ONLY the color and surface texture from B, and paint the panel shape from A with it). ` +
-      `Do NOT copy the background, layout or borders of B — B is only a color swatch. ` +
+      `REFERENCE A = IMAGE ${plinthShapeIndex} = the panel SHAPE, 3D RELIEF and GEOMETRY of the ` +
+      `PLINTH material — take ONLY the three-dimensional tile geometry from A: raised panels, ` +
+      `chamfered/beveled edges, protruding volume, real depth and recessed joints. This is NOT just a ` +
+      `flat 2D layout pattern — it is a physical 3D relief. Ignore the color of A. ` +
+      `REFERENCE B = IMAGE ${plinthColorIndex} = the COLOR/finish for the plinth ` +
+      `(take ONLY the color and surface texture from B; do NOT copy its background, layout or borders — ` +
+      `B is only a color swatch). ` +
+      `Apply the 3D RELIEF and beveled panel geometry from the plinth SHAPE reference (A) to the plinth ` +
+      `(basement) area: raised panels with chamfered edges, real depth and shadow between tiles — NOT a ` +
+      `flat painted surface. The plinth MUST have the SAME three-dimensional tile relief as its shape ` +
+      `reference A, only recolored by the plinth color reference B. Do NOT render the plinth as a smooth ` +
+      `flat colored band. ` +
+      `IMPORTANT — the plinth and the wall are DIFFERENT materials: the plinth relief comes ONLY from the ` +
+      `PLINTH shape reference (A), the wall relief comes ONLY from the wall shape reference — do NOT mix, ` +
+      `swap or copy relief between wall and plinth. ` +
       `Apply this ONLY to the narrow plinth strip at the bottom of the WALLS, with a crisp top ` +
-      `edge. Do NOT apply it to the ground, pavement, walkway or any horizontal surface.`;
+      `edge. Do NOT apply it to the ground, pavement, walkway or any horizontal surface. ` +
+      `Keep it PHOTOREALISTIC: match the daylight, sun direction and shadows of the scene from IMAGE 1, ` +
+      `with realistic stone/brick texture and natural shadowing inside the relief joints — not cartoonish, ` +
+      `not a flat colored strip.`;
   } else if (plinthShapeAsset) {
     prompt +=
       `\n\nClad ONLY the plinth strip (~0.4-0.5 m) at the bottom of the walls with the panel ` +
