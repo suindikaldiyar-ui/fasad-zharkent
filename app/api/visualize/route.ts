@@ -50,6 +50,24 @@ const CLINKER_PHOTOREAL =
   `sharp focus, natural color balance; avoid oversaturation — colors should look like real painted ` +
   `clinker under natural daylight, not neon/plastic.`;
 
+// ── Реализм СТЕНЫ для ЛЮБОЙ формы (клинкер / 3D-панель / руст / лабиринт) ──
+// Масштаб — общий для всех форм (не завязан на клинкер), плюс усиленный 3D-рельеф.
+const WALL_SCALE =
+  ` Render the wall panels at REALISTIC BRICK scale: thin, elongated elements. A single panel/brick ` +
+  `element is about ~240mm long × ~65mm high (standard brick size). Fit MANY rows across each wall ` +
+  `storey — roughly 10-14 rows per floor, NOT a few oversized blocks. This scale applies to ANY wall ` +
+  `panel form (clinker, 3D panel, rust, labirint) equally: every element must look proportionally ` +
+  `SMALL relative to the windows and doors in IMAGE 1 — use them as the scale reference. Do NOT enlarge ` +
+  `the panels just because the pattern differs from clinker.`;
+
+const WALL_RELIEF_3D =
+  ` Reproduce the FULL three-dimensional relief from the wall SHAPE reference: raised panel faces with ` +
+  `deep chamfered/beveled edges, real protruding volume, visible depth and shadow inside every bevel and ` +
+  `joint. This is a physical 3D panel with real thickness — NOT a flat 2D pattern. Each tile must show ` +
+  `its beveled frame and recessed centre with realistic self-shadowing under the scene's lighting. ` +
+  `Keep the brick-scale small element size while giving each small element its own pronounced bevel and ` +
+  `volume — small elements, but every one clearly three-dimensional.`;
+
 // Предупреждение при старте, если ключ не задан (билд не роняем).
 if (!process.env.GEMINI_API_KEY) {
   console.warn("[security] GEMINI_API_KEY не задан — визуализация работать не будет.");
@@ -593,9 +611,11 @@ export async function POST(req: NextRequest) {
       `(take ONLY its color and surface texture, ignore its background/borders). Keep the wall ` +
       `relief, windows, roof, doors and surroundings unchanged.`;
   }
-  // Реализм СТЕНЫ: масштаб кирпича (если есть форма) + фактура из B (если есть цвет) + фотореализм.
+  // Реализм СТЕНЫ (любая форма): кирпичный масштаб + усиленный 3D-рельеф +
+  // фактура из B (если есть цвет) + фотореализм. Масштаб/3D — общие для всех форм.
   if (wallShapeAsset) {
-    prompt += CLINKER_SCALE + (wallColorAsset ? CLINKER_TEXTURE_B : "") + CLINKER_PHOTOREAL;
+    prompt +=
+      WALL_SCALE + WALL_RELIEF_3D + (wallColorAsset ? CLINKER_TEXTURE_B : "") + CLINKER_PHOTOREAL;
   } else if (wallColorAsset) {
     prompt += CLINKER_PHOTOREAL;
   }
