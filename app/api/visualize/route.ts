@@ -49,7 +49,9 @@ const BRICK_SCALE =
   ` Render the wall panels at REALISTIC BRICK scale: thin, elongated elements. A single panel/brick ` +
   `element is about ~240mm long × ~65mm high (standard brick size). Fit MANY rows across each wall ` +
   `storey — roughly 10-14 rows per floor, NOT a few oversized blocks. Every element must look ` +
-  `proportionally SMALL relative to the windows and doors in IMAGE 1 — use them as the scale reference.`;
+  `proportionally SMALL relative to the windows and doors in IMAGE 1 — use them as the scale reference. ` +
+  `Lay the bricks in straight HORIZONTAL rows with a regular running-bond offset (each row shifted by ` +
+  `half a brick) — plain classic brickwork, NOT an interlocking or woven pattern.`;
 
 // Средние аккуратные блоки — РУСТ (~300×150мм, много рядов; по фото-эталону).
 const RUST_SCALE =
@@ -82,22 +84,24 @@ const scaleForShape = (shape?: string): string =>
     ? LABIRINT_SCALE
     : BRICK_SCALE;
 
-// 3D-рельеф — общий для всех форм (корректен и для кирпича, и для блоков).
+// 3D-рельеф — глубина ПО РЕФЕРЕНСУ формы (плоский клинкер → лёгкая фаска;
+// объёмная 3D-панель/руст → глубокая). Не навязываем глубокий 3D плоскому клинкеру.
 const WALL_RELIEF_3D =
-  ` Reproduce the FULL three-dimensional relief from the wall SHAPE reference: raised panel faces with ` +
-  `deep chamfered/beveled edges, real protruding volume, visible depth and shadow inside every bevel and ` +
-  `joint. This is a physical 3D panel with real thickness — NOT a flat 2D pattern. Each tile must show ` +
-  `its beveled frame and recessed centre with realistic self-shadowing under the scene's lighting. ` +
-  `Keep the brick-scale small element size while giving each small element its own pronounced bevel and ` +
-  `volume — small elements, but every one clearly three-dimensional.`;
+  ` Reproduce the three-dimensional relief from the wall SHAPE reference: panel faces with chamfered/` +
+  `beveled edges, real depth and shadow inside the bevels and joints, matching the physical thickness ` +
+  `shown in the reference. Match the relief DEPTH to the shape reference: if the reference tiles are ` +
+  `nearly flat (like flat clinker), keep the bevel shallow; if the reference shows deep 3D chamfers ` +
+  `(like 3D-panel or rust), make them deep. Do not add deep 3D bevels to a flat clinker reference. ` +
+  `Each tile shows realistic self-shadowing under the scene's lighting, at the small brick-scale element ` +
+  `size.`;
 
-// Точное копирование узора формы (все формы, критично для лабиринта).
+// Точное копирование узора формы — НЕЙТРАЛЬНОЕ (без «плетения»/interlocking/weaving,
+// чтобы клинкер/3D/руст не читались как лабиринт). Плетение — только в LABIRINT_SCALE.
 const SHAPE_COPY_EXACT =
   ` CRITICAL: Copy the panel pattern EXACTLY as shown in the SHAPE reference image — the precise tile ` +
-  `arrangement, proportions, orientation and interlocking layout. Do NOT invent, simplify or approximate ` +
-  `your own version of the pattern. Replicate the EXACT geometry from the reference: same tile sizes, ` +
-  `same weaving directions, same joint positions. The result must match the reference pattern one-to-one, ` +
-  `only rescaled to fit the wall and recolored.`;
+  `arrangement, proportions, orientation and joint layout. Do NOT invent, simplify or approximate your ` +
+  `own version. Replicate the exact tile sizes and joint positions from the reference, only rescaled to ` +
+  `fit the wall and recolored.`;
 
 // Предупреждение при старте, если ключ не задан (билд не роняем).
 if (!process.env.GEMINI_API_KEY) {
