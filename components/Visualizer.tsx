@@ -9,7 +9,7 @@ import { BELTS } from "@/lib/belts";
 import { BRACKETS } from "@/lib/brackets";
 import { TERMOPANELS } from "@/lib/termopanels";
 import { AMK } from "@/lib/amk";
-import { KLINKER } from "@/lib/klinker";
+import { PANELS } from "@/lib/panels";
 import { COLORS } from "@/lib/colors";
 import { FACADE_COLORS } from "@/lib/facadecolors";
 import { compressImage, type CompressedImage } from "@/lib/image";
@@ -799,11 +799,11 @@ export default function Visualizer({ initial }: Props) {
             )}
           </div>
 
-          {/* Клинкер — ТЕСТ: форма + цвет отдельными референсами. Стена и цоколь независимо. */}
+          {/* Панели — форма + цвет отдельными референсами. Стена и цоколь независимо. */}
           <div className="rounded-xl border border-gold/30 bg-canvas/40 p-3.5">
             <p className="text-sm font-bold text-ink">
-              Клинкер{" "}
-              <span className="font-normal text-muted">— тест: форма + цвет</span>
+              Панели{" "}
+              <span className="font-normal text-muted">— форма + цвет</span>
             </p>
             <p className="mt-1 text-[11px] leading-snug text-muted">
               Форма = рельеф панели, цвет = краска. Стена и цоколь выбираются
@@ -815,7 +815,7 @@ export default function Visualizer({ initial }: Props) {
             <div className="mt-1.5">
               <p className="mb-1.5 text-xs font-semibold text-ink">Форма стены</p>
               <RefPicker
-                items={KLINKER}
+                items={PANELS}
                 selectedId={wallShapeId}
                 onSelect={setWallShapeId}
                 emptyLabel="Без формы"
@@ -841,7 +841,7 @@ export default function Visualizer({ initial }: Props) {
             <div className="mt-1.5">
               <p className="mb-1.5 text-xs font-semibold text-ink">Форма цоколя</p>
               <RefPicker
-                items={KLINKER}
+                items={PANELS}
                 selectedId={plinthShapeId}
                 onSelect={setPlinthShapeId}
                 emptyLabel="Без формы"

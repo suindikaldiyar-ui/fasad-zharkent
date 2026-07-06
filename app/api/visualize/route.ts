@@ -9,7 +9,7 @@ import { getBelt } from "@/lib/belts";
 import { getBracket } from "@/lib/brackets";
 import { getTermopanel } from "@/lib/termopanels";
 import { AMK } from "@/lib/amk";
-import { KLINKER } from "@/lib/klinker";
+import { PANELS } from "@/lib/panels";
 import { COLORS } from "@/lib/colors";
 import { getFacadeColor } from "@/lib/facadecolors";
 import { getClientIp, rateLimit } from "@/lib/ratelimit";
@@ -289,19 +289,21 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // ── Клинкер (тест): форма (klinker/) + цвет (colors/) отдельно для стены и цоколя.
+  // ── Панели (форма) + цвет — отдельно для стены и цоколя. ОБОБЩЁННО: любая из 4 форм.
   const originKl = getOrigin(req);
-  const loadRef = async (
-    folder: string,
-    list: { id: string }[],
-    id: string | null
-  ): Promise<ImageAsset | null> =>
-    id && list.some((x) => x.id === id) ? loadAsset(folder, id, originKl) : null;
+  // Форма: находим панель по id → грузим из ЕЁ папки (panel.shape) файл panel.file.
+  const loadShape = async (id: string | null): Promise<ImageAsset | null> => {
+    const p = id ? PANELS.find((x) => x.id === id) : undefined;
+    return p ? loadAsset(p.shape, p.file, originKl) : null;
+  };
+  // Цвет: из общей папки colors/ (id = имя файла).
+  const loadColor = async (id: string | null): Promise<ImageAsset | null> =>
+    id && COLORS.some((c) => c.id === id) ? loadAsset("colors", id, originKl) : null;
 
-  let wallShapeAsset = await loadRef("klinker", KLINKER, wallShapeId);
-  let wallColorAsset = await loadRef("colors", COLORS, wallColorId);
-  let plinthShapeAsset = await loadRef("klinker", KLINKER, plinthShapeId);
-  let plinthColorAsset = await loadRef("colors", COLORS, plinthColorId);
+  let wallShapeAsset = await loadShape(wallShapeId);
+  let wallColorAsset = await loadColor(wallColorId);
+  let plinthShapeAsset = await loadShape(plinthShapeId);
+  let plinthColorAsset = await loadColor(plinthColorId);
 
   // ── Лимит фото-референсов (анти-галлюцинации) ──
   // Держим не больше MAX_REFERENCE_IMAGES картинок-референсов на запрос.
@@ -568,8 +570,8 @@ export async function POST(req: NextRequest) {
       `roof, doors and surroundings unchanged.`;
   }
 
-  // ── Клинкер (ТЕСТ): форма (REFERENCE A) + цвет (REFERENCE B), отдельно стена/цоколь.
-  // Роли референсов чётко разделены; structural lock НЕ трогаем.
+  // ── Панели (любая форма): форма (REFERENCE A) + цвет (REFERENCE B), отдельно стена/цоколь.
+  // ОБОБЩЁННО — один путь для всех форм. Роли референсов чётко разделены; structural lock НЕ трогаем.
   if (wallShapeAsset && wallColorAsset) {
     prompt +=
       `\n\nWALL cladding — TWO references define it:\n` +

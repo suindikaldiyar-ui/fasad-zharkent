@@ -1,6 +1,5 @@
 // ⚠️ АВТОГЕНЕРАЦИЯ — НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ.
-// Файл создаётся scripts/generate-manifests.mjs (npm prebuild / predev)
-// из содержимого public/references/colors/. Название — из имени файла.
+// Файл создаётся scripts/generate-manifests.mjs (npm prebuild / predev).
 export type ColorItem = { id: string; name: string; image: string };
 
 export const COLORS: ColorItem[] = [

@@ -11,7 +11,7 @@ import { TERMOPANELS } from "@/lib/termopanels";
 import { DECOR, DECOR_CATEGORY_LABEL } from "@/lib/decor";
 import { TEXTURES } from "@/lib/textures";
 import { AMK } from "@/lib/amk";
-import { KLINKER } from "@/lib/klinker";
+import { PANELS } from "@/lib/panels";
 import { COLORS } from "@/lib/colors";
 
 // Нормализованная карточка каталога (единый вид для всех категорий).
@@ -35,13 +35,16 @@ const SECTIONS: {
     items: AMK.map((a) => ({ id: a.id, name: a.name, image: a.image })),
   },
   {
-    key: "klinker",
-    // Форма стен. Список из public/references/klinker/ (lib/klinker.ts).
-    title: "Клинкер (форма стен) · тест форма+цвет",
+    key: "panels",
+    // Все формы фасада в ОДНОМ списке (klinker/3d-panel/rust/labirint → lib/panels.ts).
+    title: "Панели (форма стен)",
     canVisualize: true,
-    // Форма стен → выбор формы клинкера в визуализаторе (цвет выбирается там же).
-    hrefFor: (id) => `/visualizer?wallShape=klinker&id=${id}`,
-    items: KLINKER.map((k) => ({ id: k.id, name: k.name, image: k.image })),
+    // Форма → выбор формы в визуализаторе (цвет выбирается там же). wallShape = папка формы.
+    hrefFor: (id) => {
+      const p = PANELS.find((x) => x.id === id);
+      return `/visualizer?wallShape=${p?.shape ?? "panels"}&id=${id}`;
+    },
+    items: PANELS.map((p) => ({ id: p.id, name: p.name, image: p.image })),
   },
   {
     key: "colors",
