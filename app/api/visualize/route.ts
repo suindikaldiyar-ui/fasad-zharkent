@@ -51,22 +51,23 @@ const BRICK_SCALE =
   `storey — roughly 10-14 rows per floor, NOT a few oversized blocks. Every element must look ` +
   `proportionally SMALL relative to the windows and doors in IMAGE 1 — use them as the scale reference.`;
 
-// Умеренные блоки — РУСТ (крупнее кирпича, но не гигантские).
+// Средние аккуратные блоки — РУСТ (~300×150мм, много рядов; по фото-эталону).
 const RUST_SCALE =
-  ` Render RUST panels as rectangular block slabs about ~400mm × ~200mm each — larger than brick but ` +
-  `moderate, NOT huge. Roughly 6-8 block rows per floor. Each block is a clean rectangular slab with a ` +
-  `chamfered edge and a rusticated groove between slabs, real depth and shadow in the grooves. Use the ` +
-  `windows and doors in IMAGE 1 as scale reference so blocks stay proportional — clearly bigger than a ` +
-  `brick but not oversized.`;
+  ` Render RUST panels as neat rectangular block slabs about ~300mm × ~150mm each — medium size, clearly ` +
+  `bigger than a single brick but compact and tidy. Roughly 8-10 block rows per floor, plenty of blocks ` +
+  `across each wall. Each block is a clean rectangle with a THIN chamfered edge and a fine groove between ` +
+  `slabs, subtle depth and shadow. Use windows/doors in IMAGE 1 as scale reference — blocks stay moderate ` +
+  `and proportional, never oversized.`;
 
-// Асимметричный переплетающийся узор — ЛАБИРИНТ (плитки разной длины/ширины).
+// Мелкий плотный паркетно-лабиринтный узор — ЛАБИРИНТ (тонкие маленькие кирпичики).
 const LABIRINT_SCALE =
-  ` Render LABIRINT panels as an ASYMMETRIC interlocking pattern of rectangular tiles of VARYING sizes — ` +
-  `mix of short and long, narrow and wide rectangles, offset at different levels, forming an irregular ` +
-  `woven/maze-like layout (NOT uniform brick rows, NOT large equal blocks). Tiles are medium-sized, ` +
-  `interlocking like a labyrinth. Each tile has a chamfered edge and recessed joint with real depth and ` +
-  `shadow. Keep it proportional to windows/doors in IMAGE 1. Follow the exact tile arrangement from the ` +
-  `SHAPE reference.`;
+  ` Render LABIRINT panels as a DENSE, FINE interlocking parquet/maze pattern made of SMALL THIN ` +
+  `brick-sticks (each about ~200mm × ~50mm, narrow elongated pieces). The little sticks are laid ` +
+  `alternately VERTICALLY and HORIZONTALLY, interlocking at right angles to form a woven labyrinth/parquet ` +
+  `layout. Elements are SMALL and FREQUENT — many little sticks per wall, NOT large blocks, NOT big tiles. ` +
+  `Each stick has a thin chamfered edge and fine recessed joint with subtle shadow. Keep the pieces small ` +
+  `and proportional to windows/doors in IMAGE 1. Follow the exact interlocking arrangement from the SHAPE ` +
+  `reference. Absolutely do NOT render labirint as large blocks — it is a fine small-element weave.`;
 
 // Масштаб по форме: rust → умеренные блоки; labirint → асимметричный узор;
 // klinker/3d-panel (и всё остальное) → кирпичный.
