@@ -52,5 +52,65 @@ export const COLORS: ColorItem[] = [
     "id": "color-10",
     "name": "Цвет 10",
     "image": "/references/colors/color-10.jpg"
+  },
+  {
+    "id": "color-11",
+    "name": "Цвет 11",
+    "image": "/references/colors/color-11.jpg"
+  },
+  {
+    "id": "color-12",
+    "name": "Цвет 12",
+    "image": "/references/colors/color-12.jpg"
+  },
+  {
+    "id": "color-13",
+    "name": "Цвет 13",
+    "image": "/references/colors/color-13.jpg"
+  },
+  {
+    "id": "color-14",
+    "name": "Цвет 14",
+    "image": "/references/colors/color-14.jpg"
+  },
+  {
+    "id": "color-15",
+    "name": "Цвет 15",
+    "image": "/references/colors/color-15.jpg"
+  },
+  {
+    "id": "color-16",
+    "name": "Цвет 16",
+    "image": "/references/colors/color-16.jpg"
+  },
+  {
+    "id": "color-17",
+    "name": "Цвет 17",
+    "image": "/references/colors/color-17.jpg"
+  },
+  {
+    "id": "color-18",
+    "name": "Цвет 18",
+    "image": "/references/colors/color-18.jpg"
+  },
+  {
+    "id": "color-19",
+    "name": "Цвет 19",
+    "image": "/references/colors/color-19.jpg"
+  },
+  {
+    "id": "color-20",
+    "name": "Цвет 20",
+    "image": "/references/colors/color-20.jpg"
+  },
+  {
+    "id": "color-21",
+    "name": "Цвет 21",
+    "image": "/references/colors/color-21.jpg"
+  },
+  {
+    "id": "color-22",
+    "name": "Цвет 22",
+    "image": "/references/colors/color-22.jpg"
   }
 ];
