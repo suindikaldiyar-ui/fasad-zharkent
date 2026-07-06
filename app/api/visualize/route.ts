@@ -43,25 +43,39 @@ const CLINKER_PHOTOREAL =
   `sharp focus, natural color balance; avoid oversaturation — colors should look like real painted ` +
   `clinker under natural daylight, not neon/plastic.`;
 
-// ── Масштаб ЗАВИСИТ ОТ ФОРМЫ (не один на всех) ──
-// Кирпичный/мелкий масштаб — клинкер, 3D-панель, лабиринт.
+// ── Масштаб ЗАВИСИТ ОТ ФОРМЫ (три категории, не один на всех) ──
+// Кирпичный/мелкий масштаб — клинкер, 3D-панель.
 const BRICK_SCALE =
   ` Render the wall panels at REALISTIC BRICK scale: thin, elongated elements. A single panel/brick ` +
   `element is about ~240mm long × ~65mm high (standard brick size). Fit MANY rows across each wall ` +
   `storey — roughly 10-14 rows per floor, NOT a few oversized blocks. Every element must look ` +
   `proportionally SMALL relative to the windows and doors in IMAGE 1 — use them as the scale reference.`;
 
-// Крупный блочный масштаб — только РУСТ (рустовые плиты, не кирпич).
+// Умеренные блоки — РУСТ (крупнее кирпича, но не гигантские).
 const RUST_SCALE =
-  ` Render the RUST panels as LARGE rectangular block slabs (~600mm × ~300mm each), big-format blocks — ` +
-  `NOT small bricks. Only a few large block rows per floor (roughly 4-6), each block clearly bigger than ` +
-  `a brick. Deep rusticated groove/joint around each large slab, chamfered edges, with real depth and ` +
-  `shadow in the grooves. Use the windows and doors in IMAGE 1 as scale reference so the blocks look ` +
-  `large and proportional.`;
+  ` Render RUST panels as rectangular block slabs about ~400mm × ~200mm each — larger than brick but ` +
+  `moderate, NOT huge. Roughly 6-8 block rows per floor. Each block is a clean rectangular slab with a ` +
+  `chamfered edge and a rusticated groove between slabs, real depth and shadow in the grooves. Use the ` +
+  `windows and doors in IMAGE 1 as scale reference so blocks stay proportional — clearly bigger than a ` +
+  `brick but not oversized.`;
 
-// Масштаб по форме: rust → крупные блоки; klinker/3d-panel/labirint → кирпичный.
+// Асимметричный переплетающийся узор — ЛАБИРИНТ (плитки разной длины/ширины).
+const LABIRINT_SCALE =
+  ` Render LABIRINT panels as an ASYMMETRIC interlocking pattern of rectangular tiles of VARYING sizes — ` +
+  `mix of short and long, narrow and wide rectangles, offset at different levels, forming an irregular ` +
+  `woven/maze-like layout (NOT uniform brick rows, NOT large equal blocks). Tiles are medium-sized, ` +
+  `interlocking like a labyrinth. Each tile has a chamfered edge and recessed joint with real depth and ` +
+  `shadow. Keep it proportional to windows/doors in IMAGE 1. Follow the exact tile arrangement from the ` +
+  `SHAPE reference.`;
+
+// Масштаб по форме: rust → умеренные блоки; labirint → асимметричный узор;
+// klinker/3d-panel (и всё остальное) → кирпичный.
 const scaleForShape = (shape?: string): string =>
-  shape === "rust" ? RUST_SCALE : BRICK_SCALE;
+  shape === "rust"
+    ? RUST_SCALE
+    : shape === "labirint"
+    ? LABIRINT_SCALE
+    : BRICK_SCALE;
 
 // 3D-рельеф — общий для всех форм (корректен и для кирпича, и для блоков).
 const WALL_RELIEF_3D =
