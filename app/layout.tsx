@@ -9,9 +9,9 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Fasad Zharkent · Калькулятор фасада + AI-визуализация",
+  title: "Fasad Group · Калькулятор фасада + AI-визуализация",
   description:
-    "Fasad Zharkent (г. Жаркент) — расчёт сметы фасада и AI-визуализация дома.",
+    "Fasad Group — расчёт сметы фасада и AI-визуализация дома.",
 };
 
 export default function RootLayout({

@@ -12,13 +12,12 @@ export default function Hero() {
         <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
           {COMPANY.name}
         </h1>
-        <p className="mt-1.5 text-sm font-medium text-muted">г. {COMPANY.city}</p>
       </div>
     </header>
   );
 }
 
-// Логотип: если есть /logo.png — показываем его; иначе крупная монограмма FZ.
+// Логотип: если есть /logo.png — показываем его; иначе крупная монограмма FG.
 function BrandMark() {
   const [logoOk, setLogoOk] = useState(true);
   if (logoOk) {
@@ -34,7 +33,7 @@ function BrandMark() {
   }
   return (
     <span className="inline-flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-goldLight text-4xl font-extrabold tracking-tight text-stone shadow-gold sm:h-28 sm:w-28 sm:text-5xl">
-      FZ
+      FG
     </span>
   );
 }

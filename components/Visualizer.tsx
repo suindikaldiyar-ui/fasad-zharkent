@@ -235,7 +235,7 @@ export default function Visualizer({ initial }: Props) {
   }
 
   function download() {
-    if (result) downloadUrl(result, "fasad-zharkent-facade.png");
+    if (result) downloadUrl(result, "fasad-group-facade.png");
   }
 
   // Загрузка картинки из data url в HTMLImageElement
@@ -287,7 +287,7 @@ export default function Visualizer({ initial }: Props) {
 
   function downloadBoth() {
     if (beforeUrl && result)
-      mergeSideBySide(beforeUrl, "ДО", result, "ПОСЛЕ", "fasad-zharkent-do-posle.jpg");
+      mergeSideBySide(beforeUrl, "ДО", result, "ПОСЛЕ", "fasad-group-do-posle.jpg");
   }
 
   function downloadComparison() {
@@ -297,7 +297,7 @@ export default function Visualizer({ initial }: Props) {
         "Без кронштейнов",
         resultYes,
         "С кронштейнами",
-        "fasad-zharkent-brackets.jpg"
+        "fasad-group-brackets.jpg"
       );
   }
 
@@ -1104,14 +1104,14 @@ export default function Visualizer({ initial }: Props) {
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => downloadUrl(resultNo, "fasad-zharkent-no-brackets.png")}
+                  onClick={() => downloadUrl(resultNo, "fasad-group-no-brackets.png")}
                   className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-3.5 py-2 text-sm font-semibold text-ink transition hover:border-terracotta hover:text-terracotta"
                 >
                   <DownloadIcon /> Без кронштейнов
                 </button>
                 <button
                   type="button"
-                  onClick={() => downloadUrl(resultYes, "fasad-zharkent-with-brackets.png")}
+                  onClick={() => downloadUrl(resultYes, "fasad-group-with-brackets.png")}
                   className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-3.5 py-2 text-sm font-semibold text-ink transition hover:border-terracotta hover:text-terracotta"
                 >
                   <DownloadIcon /> С кронштейнами

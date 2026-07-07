@@ -21,8 +21,7 @@ export default function EstimatePanel({ estimate }: Props) {
     <div className="print-block flex h-full flex-col rounded-2xl border border-line bg-surface shadow-card">
       {/* Печатная шапка — видна только при печати */}
       <div className="print-only mb-4 border-b border-line pb-4 text-center">
-        <div className="text-2xl font-extrabold tracking-tight">Fasad Zharkent</div>
-        <div className="mt-0.5 text-sm">г. Жаркент</div>
+        <div className="text-2xl font-extrabold tracking-tight">Fasad Group</div>
         <div className="mt-3 text-lg font-bold">Коммерческое предложение</div>
         {today && <div className="mt-0.5 text-sm">от {today}</div>}
       </div>

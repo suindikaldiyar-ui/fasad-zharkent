@@ -78,7 +78,7 @@ export default function ClientKP({ estimate }: Props) {
       set: setAddress,
       type: "text",
       inputMode: "text" as const,
-      placeholder: "напр.: г. Жаркент, ул. …",
+      placeholder: "напр.: г. …, ул. …",
     },
     {
       label: "Телефон клиента",

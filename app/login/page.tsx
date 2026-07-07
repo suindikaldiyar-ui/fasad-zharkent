@@ -47,14 +47,14 @@ function LoginForm() {
   return (
     <main className="flex min-h-screen items-center justify-center px-5">
       <div className="w-full max-w-sm rounded-2xl border border-line bg-surface p-7 shadow-card">
-        {/* Монограмма-логотип «FZ» */}
+        {/* Монограмма-логотип «FG» */}
         <div className="mb-6 flex justify-center">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-goldLight text-lg font-extrabold tracking-tight text-stone shadow-gold">
-            FZ
+            FG
           </span>
         </div>
 
-        <h1 className="text-center text-xl font-extrabold text-ink">Fasad Zharkent</h1>
+        <h1 className="text-center text-xl font-extrabold text-ink">Fasad Group</h1>
         <p className="mt-1 text-center text-sm text-muted">
           Введите пароль для доступа
         </p>

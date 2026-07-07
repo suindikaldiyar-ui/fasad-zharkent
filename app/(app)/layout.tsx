@@ -9,7 +9,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <TabNav />
       <div className="mx-auto max-w-6xl px-5 py-7">{children}</div>
       <footer className="no-print pb-6 pt-2 text-center text-xs text-muted/60">
-        Fasad Zharkent · расчёт ориентировочный, уточняется при замере
+        Fasad Group · расчёт ориентировочный, уточняется при замере
       </footer>
     </main>
   );
