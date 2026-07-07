@@ -114,6 +114,19 @@ const SHAPE_COPY_EXACT =
   `own version. Replicate the exact tile sizes and joint positions from the reference, only rescaled to ` +
   `fit the wall and recolored.`;
 
+// ── Чёткость рисунка на УЗКОМ цоколе (~0.4-0.5 м) — общее + по форме ──
+const PLINTH_DETAIL =
+  ` Even though the plinth strip is narrow, render its panel pattern with FULL clarity and detail — ` +
+  `do NOT flatten, blur or simplify it because the area is small. Show the complete relief/pattern at ` +
+  `proper density within the plinth band. Fit at least 2-3 clear rows of the pattern within the plinth ` +
+  `height so the design is readable.`;
+const PLINTH_3D_DETAIL =
+  ` If the plinth uses a 3D-panel form, keep the STRONG three-dimensional relief (raised/recessed tiles, ` +
+  `deep bevels, real shadow) even in the narrow plinth strip — do not render it as a flat colored band.`;
+const PLINTH_LABIRINT_DETAIL =
+  ` If the plinth uses a labirint form, keep the fine interlocking vertical/horizontal weave clearly ` +
+  `visible even in the narrow strip — small dense sticks, not a smudged texture.`;
+
 // Предупреждение при старте, если ключ не задан (билд не роняем).
 if (!process.env.GEMINI_API_KEY) {
   console.warn("[security] GEMINI_API_KEY не задан — визуализация работать не будет.");
@@ -705,10 +718,16 @@ export async function POST(req: NextRequest) {
       `\n\nPaint ONLY the plinth strip (~0.4-0.5 m) at the bottom of the walls in the color shown ` +
       `in IMAGE ${plinthColorIndex} (take ONLY its color, ignore its background). Do NOT touch the ground.`;
   }
-  // Масштаб ЦОКОЛЯ — тоже по форме (rust = крупные блоки, остальные = кирпич).
-  // Усиленный 3D-рельеф цоколя задаётся в ветке выше — здесь только масштаб/фактура/фотореализм.
+  // Масштаб ЦОКОЛЯ — по форме (rust = крупные блоки, остальные = кирпич) + чёткость на узкой
+  // полосе + усиление по форме (3D-панель/лабиринт). Усиленный 3D-рельеф цоколя — в ветке выше.
   if (plinthShapeAsset) {
-    prompt += scaleForShape(plinthShape) + (plinthColorAsset ? CLINKER_TEXTURE_B : "") + CLINKER_PHOTOREAL;
+    prompt +=
+      scaleForShape(plinthShape) +
+      PLINTH_DETAIL +
+      (plinthShape === "3d-panel" ? PLINTH_3D_DETAIL : "") +
+      (plinthShape === "labirint" ? PLINTH_LABIRINT_DETAIL : "") +
+      (plinthColorAsset ? CLINKER_TEXTURE_B : "") +
+      CLINKER_PHOTOREAL;
   } else if (plinthColorAsset) {
     prompt += CLINKER_PHOTOREAL;
   }
