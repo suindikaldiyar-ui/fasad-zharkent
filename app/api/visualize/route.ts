@@ -114,6 +114,15 @@ const SHAPE_COPY_EXACT =
   `own version. Replicate the exact tile sizes and joint positions from the reference, only rescaled to ` +
   `fit the wall and recolored.`;
 
+// Размер элементов = как в референсе, НЕ увеличивать (общее для всех форм, стена и цоколь).
+const MATCH_REF_SIZE =
+  ` MATCH THE ELEMENT SIZE TO THE SHAPE REFERENCE EXACTLY: reproduce the tiles/bricks/blocks at the SAME ` +
+  `relative size as they appear in the shape reference image — same number of elements per area, same ` +
+  `proportions. Do NOT enlarge or scale up the elements. If the reference shows small/medium tiles, keep ` +
+  `them small/medium — never make them bigger. Look at how many rows and how many elements per row are ` +
+  `visible in the reference and replicate that density on the house walls. When unsure, err towards ` +
+  `SMALLER elements and MORE of them, matching the reference density.`;
+
 // ── Чёткость рисунка на УЗКОМ цоколе (~0.4-0.5 м) — общее + по форме ──
 const PLINTH_DETAIL =
   ` Even though the plinth strip is narrow, render its panel pattern with FULL clarity and detail — ` +
@@ -679,6 +688,7 @@ export async function POST(req: NextRequest) {
     prompt +=
       scaleForShape(wallShape) +
       SHAPE_COPY_EXACT +
+      MATCH_REF_SIZE +
       WALL_RELIEF_3D +
       (wallColorAsset ? CLINKER_TEXTURE_B : "") +
       CLINKER_PHOTOREAL;
@@ -723,6 +733,7 @@ export async function POST(req: NextRequest) {
   if (plinthShapeAsset) {
     prompt +=
       scaleForShape(plinthShape) +
+      MATCH_REF_SIZE +
       PLINTH_DETAIL +
       (plinthShape === "3d-panel" ? PLINTH_3D_DETAIL : "") +
       (plinthShape === "labirint" ? PLINTH_LABIRINT_DETAIL : "") +
