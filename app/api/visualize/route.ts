@@ -43,15 +43,24 @@ const CLINKER_PHOTOREAL =
   `sharp focus, natural color balance; avoid oversaturation — colors should look like real painted ` +
   `clinker under natural daylight, not neon/plastic.`;
 
-// ── Масштаб ЗАВИСИТ ОТ ФОРМЫ (три категории, не один на всех) ──
-// Кирпичный/мелкий масштаб — клинкер, 3D-панель.
+// ── Масштаб ЗАВИСИТ ОТ ФОРМЫ (четыре категории, не один на всех) ──
+// Мелкий частый кирпич — ТОЛЬКО клинкер (ровный плоский, как реальный АМК).
 const BRICK_SCALE =
-  ` Render the wall panels at REALISTIC BRICK scale: thin, elongated elements. A single panel/brick ` +
-  `element is about ~240mm long × ~65mm high (standard brick size). Fit MANY rows across each wall ` +
-  `storey — roughly 10-14 rows per floor, NOT a few oversized blocks. Every element must look ` +
-  `proportionally SMALL relative to the windows and doors in IMAGE 1 — use them as the scale reference. ` +
-  `Lay the bricks in straight HORIZONTAL rows with a regular running-bond offset (each row shifted by ` +
-  `half a brick) — plain classic brickwork, NOT an interlocking or woven pattern.`;
+  ` Render at SMALL realistic brick scale: each brick is thin and small, about ~240mm long × ~65mm high. ` +
+  `Fit a LOT of rows — at least 16-20 brick rows per floor. The bricks must look SMALL and NUMEROUS, ` +
+  `densely packed, clearly small relative to the windows and doors in IMAGE 1. A typical window height ` +
+  `should span roughly 6-8 brick rows. Do NOT enlarge the bricks — if in doubt, make them SMALLER and ` +
+  `add MORE rows. Plain classic horizontal brickwork with running-bond offset, NOT interlocking or woven.`;
+
+// Мелкий частый кирпич + объёмный рельеф — 3D-ПАНЕЛЬ (плитки на разных уровнях, глубокие фаски).
+const PANEL_3D_SCALE =
+  ` Render at SMALL brick-tile scale — many small tiles, at least 16-20 rows per floor, each tile small ` +
+  `relative to windows/doors in IMAGE 1, densely packed. Do NOT enlarge — smaller and more rows if in ` +
+  `doubt. Follow the SHAPE reference: rectangular tiles arranged with a subtle offset, but with STRONG ` +
+  `three-dimensional relief — some tiles raised, some recessed, deep chamfered/beveled edges, protruding ` +
+  `volume and real depth between tiles. This is a sculpted 3D panel, NOT flat brickwork. Reproduce the ` +
+  `exact tile arrangement and depth variation from the shape reference. A typical window height should ` +
+  `span roughly 6-8 tile rows. Emphasize the raised/recessed 3D effect with realistic self-shadowing.`;
 
 // Средние аккуратные блоки — РУСТ (~300×150мм, много рядов; по фото-эталону).
 const RUST_SCALE =
@@ -75,10 +84,12 @@ const LABIRINT_SCALE =
   `Reproduce the labyrinth weave EXACTLY as in the shape reference — the specific alternating ` +
   `vertical/horizontal stick arrangement shown there, not a generic approximation.`;
 
-// Масштаб по форме: rust → умеренные блоки; labirint → асимметричный узор;
-// klinker/3d-panel (и всё остальное) → кирпичный.
+// Масштаб по форме (4 формы — 4 масштаба): 3d-panel → объёмный; rust → умеренные
+// блоки; labirint → асимметричный узор; klinker (и всё остальное) → кирпичный.
 const scaleForShape = (shape?: string): string =>
-  shape === "rust"
+  shape === "3d-panel"
+    ? PANEL_3D_SCALE
+    : shape === "rust"
     ? RUST_SCALE
     : shape === "labirint"
     ? LABIRINT_SCALE
