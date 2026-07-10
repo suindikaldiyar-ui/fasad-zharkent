@@ -743,9 +743,26 @@ export async function POST(req: NextRequest) {
     prompt += CLINKER_PHOTOREAL;
   }
 
-  // Доп. инструкции пользователя
+  // ── Комментарий пользователя: ОБЯЗАТЕЛЬНЫЕ требования (зонирование фасада) ──
+  // Идёт ПОСЛЕ общих материалов (поэтому «above» корректно) и приоритетнее их,
+  // но НИКОГДА не выше structural lock — он подтверждается финальным напоминанием.
+  // Пустой комментарий — ничего не добавляем.
   if (userComment) {
-    prompt += `\n\nAdditional user instructions (follow them): ${userComment}`;
+    prompt +=
+      `\n\nUSER'S SPECIFIC DESIGN REQUIREMENTS — these are MANDATORY and must be followed precisely: ` +
+      `${userComment}\n` +
+      `Apply these zoning/material instructions exactly as described. If the user specifies different ` +
+      `materials for different zones (corners, columns, upper band, lower band, plinth, main wall), ` +
+      `render each zone with its specified material and keep clean, straight boundaries between zones. ` +
+      `Follow the user's zone sizes (e.g. '1 meter under the roof') using windows/doors in IMAGE 1 as ` +
+      `scale reference. These requirements take priority over generic material instructions above, but ` +
+      `NEVER override the STRUCTURAL LOCK — the house geometry stays unchanged.`;
+
+    // Финальное напоминание: structural lock остаётся главным (сам блок не трогаем).
+    prompt +=
+      `\n\nFINAL REMINDER: the CRITICAL STRUCTURAL LOCK stated at the very top is absolute and outranks ` +
+      `everything else, including the user's requirements — keep the exact house geometry, number of ` +
+      `floors, roof, windows, doors, camera angle and background from IMAGE 1 completely unchanged.`;
   }
 
   // contents.parts = текст + все референс-картинки по порядку
