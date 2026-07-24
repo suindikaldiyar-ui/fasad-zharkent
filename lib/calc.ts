@@ -108,41 +108,19 @@ export function calculate(
 
   const items: LineItem[] = [];
 
-  // 1. Термопанель = panelArea × цена (чистая площадь: стены − окна)
+  // 1. Стена = panelArea × цена (чистая площадь: стены − окна)
   items.push({
     key: "panel",
-    name: "Термопанель",
+    name: "Стена",
     detail: `${fmtNum(panelArea)} м² (стены ${fmtNum(wallArea)} − окна ${fmtNum(openingsArea)})`,
     unitLabel: "тг/м²",
-    unitPrice: prices.termopanelPricePerM2,
-    total: round(panelArea * prices.termopanelPricePerM2),
+    unitPrice: prices.wallPricePerM2,
+    total: round(panelArea * prices.wallPricePerM2),
   });
 
-  // 2. Клей — БОЛЬШЕ НЕ ЗДЕСЬ. Считается в блоке «Расходные материалы»
-  //    (норма 1 мешок на 2.5 м², см. CONSUMABLES в lib/prices.ts), чтобы не было задвоения.
-
-  // 3. Травертин = ceil(panelArea / 10) вёдер
-  const travBuckets = ceil(panelArea / NORMS.TRAVERTINE_M2_PER_BUCKET);
-  items.push({
-    key: "travertine",
-    name: "Травертин (20 кг / ведро)",
-    detail: `${travBuckets} ${plural(travBuckets, "ведро", "ведра", "вёдер")}`,
-    unitLabel: "тг/ведро",
-    unitPrice: prices.travertinePerBucket,
-    total: travBuckets * prices.travertinePerBucket,
-  });
-
-  // 4. Лак = ceil(panelArea / 66) банок по 10кг
-  const lacquerCans = ceil(panelArea / NORMS.LACQUER_M2_PER_CAN);
-  const lacquerKg = round((panelArea / NORMS.LACQUER_M2_PER_CAN) * NORMS.LACQUER_KG_PER_CAN);
-  items.push({
-    key: "lacquer",
-    name: "Лак (10 кг / банка)",
-    detail: `${lacquerCans} ${plural(lacquerCans, "банка", "банки", "банок")} · ≈${fmtNum(lacquerKg)} кг`,
-    unitLabel: "тг/банка",
-    unitPrice: prices.lacquerPerCan,
-    total: lacquerCans * prices.lacquerPerCan,
-  });
+  // 2. Клей — в блоке «Расходные материалы» (норма 1 мешок на 2.5 м², см. CONSUMABLES).
+  // 3. Травертин — удалён из сметы.
+  // 4. Лак — удалён из сметы.
 
   // 5. Обрамление = окна × 8 м (БАЗОВАЯ строка — остаётся всегда)
   const framingMeters = windows * NORMS.FRAMING_M_PER_WINDOW;
@@ -195,16 +173,7 @@ export function calculate(
     total: round(foundationArea * foundationPerM2),
   });
 
-  // 8. Затирка = 🎁 БОНУС, бесплатно
-  items.push({
-    key: "grout",
-    name: "Затирка",
-    detail: "В подарок",
-    unitLabel: "",
-    unitPrice: 0,
-    total: 0,
-    bonus: true,
-  });
+  // 8. Затирка — удалена из сметы.
 
   // ── Расходные материалы ──
   // Считаем от УЖЕ посчитанной площади стен (panelArea = стены − окна/двери),

@@ -10,9 +10,7 @@ interface Props {
 }
 
 const FIELDS: { key: keyof Prices; label: string; suffix: string; locked?: boolean }[] = [
-  { key: "termopanelPricePerM2", label: "Термопанель", suffix: "тг/м²" },
-  { key: "travertinePerBucket", label: "Травертин", suffix: "тг/ведро" },
-  { key: "lacquerPerCan", label: "Лак", suffix: "тг/банка" },
+  { key: "wallPricePerM2", label: "Стена", suffix: "тг/м²" },
   { key: "framingPerMeter", label: "Обрамление", suffix: "тг/м" },
   { key: "cornerPerMeter", label: "Углы", suffix: "тг/м" },
   { key: "foundationMaterialPerM2", label: "Фундамент: материал", suffix: "тг/м²" },

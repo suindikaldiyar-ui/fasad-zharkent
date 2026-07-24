@@ -54,11 +54,11 @@ export default function ClientKP({ estimate }: Props) {
       `──────────────────────\n` +
       `Клиент: ${name.trim() || "—"}\n` +
       `Адрес объекта: ${address.trim() || "—"}\n\n` +
-      `Расчёт фасада (термопанель, травертин):\n` +
+      `Расчёт фасада:\n` +
       `${lines}\n` +
       consBlock +
       `──────────────────────\n` +
-      `Термопанель (чистая площадь): ${fmtNum(estimate.panelArea)} м²\n` +
+      `Стена (чистая площадь): ${fmtNum(estimate.panelArea)} м²\n` +
       `Фундамент (материал + краска): ${fmtNum(estimate.foundationArea)} м²\n` +
       `Общая площадь: ${fmtNum(estimate.totalArea)} м²\n\n` +
       `ИТОГО: ${fmtMoney(estimate.total)}\n` +

@@ -8,9 +8,7 @@
 //  1) ЦЕНЫ, тг  (это же значения по умолчанию в панели «Настройка цен»)
 // ─────────────────────────────────────────────
 export interface Prices {
-  termopanelPricePerM2: number; // термопанель, тг/м²
-  travertinePerBucket: number; // травертин, тг/ведро (20 кг)
-  lacquerPerCan: number; // лак, тг/банка (10 кг)
+  wallPricePerM2: number; // стена, тг/м²
   framingPerMeter: number; // обрамление окон, тг/м
   cornerPerMeter: number; // углы, тг/м
   foundationMaterialPerM2: number; // фундамент: материал, тг/м²
@@ -23,9 +21,7 @@ export interface Prices {
 }
 
 export const DEFAULT_PRICES: Prices = {
-  termopanelPricePerM2: 3200, // ← термопанель, тг/м²
-  travertinePerBucket: 9000, // ← травертин, тг/ведро
-  lacquerPerCan: 22000, // ← лак, тг/банка
+  wallPricePerM2: 3200, // ← стена, тг/м²
   framingPerMeter: 2500, // ← обрамление окон, тг/м
   cornerPerMeter: 3500, // ← углы, тг/м
   foundationMaterialPerM2: 3800, // ← фундамент: материал, тг/м²
@@ -42,10 +38,8 @@ export const DEFAULT_PRICES: Prices = {
 //     Меняй, только если реально изменились нормы поставщика.
 // ─────────────────────────────────────────────
 export const NORMS = {
-  // Клей — норма перенесена в CONSUMABLES (1 мешок на 2.5 м²), старая 8 м²/мешок удалена.
-  TRAVERTINE_M2_PER_BUCKET: 10, // 20 кг = 1 ведро = 10 м²
-  LACQUER_M2_PER_CAN: 66, // 10 кг = 66 м²
-  LACQUER_KG_PER_CAN: 10, // 1 банка = 10 кг (для показа ≈ кг)
+  // Клей — норма в CONSUMABLES (1 мешок на 2.5 м²).
+  // Травертин и лак удалены из сметы — их нормы больше не нужны.
   FRAMING_M_PER_WINDOW: 8, // 1 окно = 8 м (верх + низ + 2 стороны)
   PILASTER_M_PER_CORNER: 3, // высота пилястры (упрощённо), м
 } as const;
