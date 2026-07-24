@@ -18,6 +18,10 @@ export interface Prices {
   sealantPerPiece: number; // герметик, тг/шт
   primerPerPiece: number; // грунтовка, тг/шт
   foamGluePerPiece: number; // пеноклей, тг/шт
+  // ── Краска (нормы — ниже в PAINTS, тут только ЦЕНЫ) ──
+  paintBaseAPerBucket: number; // база А (стены), тг/ведро
+  paintMixPerBucket: number; // микс (стены), тг/ведро
+  paintBaseCPerBucket: number; // база С (фундамент), тг/ведро
 }
 
 export const DEFAULT_PRICES: Prices = {
@@ -31,6 +35,10 @@ export const DEFAULT_PRICES: Prices = {
   sealantPerPiece: 0, // ← герметик, тг/шт
   primerPerPiece: 0, // ← грунтовка, тг/шт
   foamGluePerPiece: 0, // ← пеноклей, тг/шт
+  // Краска — плейсхолдеры, редактируются в панели «Настройка цен»
+  paintBaseAPerBucket: 0, // ← база А (стены), тг/ведро
+  paintMixPerBucket: 0, // ← микс (стены), тг/ведро
+  paintBaseCPerBucket: 0, // ← база С (фундамент), тг/ведро
 };
 
 // ─────────────────────────────────────────────
@@ -69,4 +77,28 @@ export const CONSUMABLES: Consumable[] = [
   { key: "cons-sealant", name: "Герметик",  m2PerUnit: 5,   priceKey: "sealantPerPiece",  unitLabel: "тг/шт",    unitOne: "шт",    unitFew: "шт",    unitMany: "шт" },
   { key: "cons-primer",  name: "Грунтовка", m2PerUnit: 100, priceKey: "primerPerPiece",   unitLabel: "тг/шт",    unitOne: "шт",    unitFew: "шт",    unitMany: "шт" },
   { key: "cons-foam",    name: "Пеноклей",  m2PerUnit: 40,  priceKey: "foamGluePerPiece", unitLabel: "тг/шт",    unitOne: "шт",    unitFew: "шт",    unitMany: "шт" },
+];
+
+// ─────────────────────────────────────────────
+//  4) КРАСКА  ← НОРМЫ здесь (менять только тут), цены — в панели «Настройка цен»
+//
+//     СТЕНЫ  (area: "wall")       — База А и Микс, ОБА одновременно, от panelArea (стены − окна).
+//     ФУНДАМЕНТ (area: "foundation") — только База С, от площади фундамента.
+//     Количество = ceil(площадь / m2PerBucket) — округление ВСЕГДА вверх.
+//     Проверка: стены 80 м² → База А 1 ведро, Микс 4; 81 м² → 2 и 5.
+//               фундамент 40 м² → База С 1 ведро; 41 м² → 2.
+// ─────────────────────────────────────────────
+export interface Paint {
+  key: string;
+  name: string;
+  area: "wall" | "foundation"; // от какой площади считаем
+  m2PerBucket: number; // ← НОРМА: 1 ведро на N м²
+  priceKey: keyof Prices; // ← откуда берётся ЦЕНА (панель «Настройка цен»)
+}
+
+export const PAINTS: Paint[] = [
+  //                         площадь          норма                цена из Prices
+  { key: "paint-base-a", name: "База А", area: "wall",       m2PerBucket: 80, priceKey: "paintBaseAPerBucket" },
+  { key: "paint-mix",    name: "Микс",   area: "wall",       m2PerBucket: 20, priceKey: "paintMixPerBucket" },
+  { key: "paint-base-c", name: "База С", area: "foundation", m2PerBucket: 40, priceKey: "paintBaseCPerBucket" },
 ];

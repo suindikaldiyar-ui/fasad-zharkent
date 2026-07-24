@@ -3,10 +3,10 @@
 // ──────────────────────────────────────────
 // ⚠️  ВСЕ ЦЕНЫ и НОРМЫ живут в lib/prices.ts — там их и меняем.
 import { getDecor, type DecorItem } from "./decor";
-import { NORMS, DEFAULT_PRICES, CONSUMABLES, type Prices } from "./prices";
+import { NORMS, DEFAULT_PRICES, CONSUMABLES, PAINTS, type Prices } from "./prices";
 
 // Ре-экспорт для обратной совместимости: старые импорты из "@/lib/calc" работают.
-export { NORMS, DEFAULT_PRICES, CONSUMABLES };
+export { NORMS, DEFAULT_PRICES, CONSUMABLES, PAINTS };
 export type { Prices };
 
 // Стена: высота × длина
@@ -43,6 +43,8 @@ export interface Estimate {
   items: LineItem[];
   consumables: LineItem[]; // расходники (клей/герметик/грунтовка/пеноклей) — отдельным блоком
   consumablesTotal: number; // сумма расходников (входит в total)
+  paints: LineItem[]; // краска (База А + Микс по стенам, База С по фундаменту)
+  paintsTotal: number; // сумма краски (входит в total)
   total: number;
   pricePerM2: number;
   // Площади (для отображения и КП)
@@ -196,14 +198,41 @@ export function calculate(
   });
   const consumablesTotal = consumables.reduce((s, it) => s + it.total, 0);
 
+  // ── Краска ──
+  // Стены (База А + Микс) считаются от panelArea, фундамент (База С) — от foundationArea.
+  // Нормы — в lib/prices.ts (PAINTS), цены — из настроек. Округление всегда вверх.
+  // Позиции с нулевой площадью (напр. фундамента нет) не показываем.
+  const paints: LineItem[] = PAINTS.flatMap((p) => {
+    const area = p.area === "wall" ? panelArea : foundationArea;
+    if (area <= 0) return [];
+    const qty = ceil(area / p.m2PerBucket);
+    const unitPrice = Math.max(0, prices[p.priceKey] || 0);
+    return [
+      {
+        key: p.key,
+        name: p.name,
+        detail:
+          `${qty} ${plural(qty, "ведро", "ведра", "вёдер")} · ` +
+          `${p.area === "wall" ? "стены" : "фундамент"} ${fmtNum(area)} м² · ` +
+          `норма 1 на ${fmtNum(p.m2PerBucket)} м²`,
+        unitLabel: "тг/ведро",
+        unitPrice,
+        total: round(qty * unitPrice), // цена 0 → 0, итог не ломает
+      },
+    ];
+  });
+  const paintsTotal = paints.reduce((s, it) => s + it.total, 0);
+
   const total =
-    items.reduce((sum, it) => sum + it.total, 0) + consumablesTotal;
+    items.reduce((sum, it) => sum + it.total, 0) + consumablesTotal + paintsTotal;
   const pricePerM2 = totalArea > 0 ? round(total / totalArea) : 0;
 
   return {
     items,
     consumables,
     consumablesTotal,
+    paints,
+    paintsTotal,
     total,
     pricePerM2,
     panelArea,

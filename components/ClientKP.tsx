@@ -49,6 +49,21 @@ export default function ClientKP({ estimate }: Props) {
           : "")
       : "";
 
+    // Краска — отдельным блоком (те же данные, что на экране)
+    const paintLines = estimate.paints
+      .map((it) =>
+        it.unitPrice > 0
+          ? `• ${it.name} — ${it.detail} — ${fmtMoney(it.total)}`
+          : `• ${it.name} — ${it.detail}`
+      )
+      .join("\n");
+    const paintBlock = estimate.paints.length
+      ? `\nКраска:\n${paintLines}\n` +
+        (estimate.paintsTotal > 0
+          ? `Итого краска: ${fmtMoney(estimate.paintsTotal)}\n`
+          : "")
+      : "";
+
     return (
       `Коммерческое предложение — ${COMPANY.name}\n` +
       `──────────────────────\n` +
@@ -57,6 +72,7 @@ export default function ClientKP({ estimate }: Props) {
       `Расчёт фасада:\n` +
       `${lines}\n` +
       consBlock +
+      paintBlock +
       `──────────────────────\n` +
       `Стена (чистая площадь): ${fmtNum(estimate.panelArea)} м²\n` +
       `Фундамент (материал + краска): ${fmtNum(estimate.foundationArea)} м²\n` +

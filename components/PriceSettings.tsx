@@ -20,6 +20,10 @@ const FIELDS: { key: keyof Prices; label: string; suffix: string; locked?: boole
   { key: "sealantPerPiece", label: "Герметик", suffix: "тг/шт" },
   { key: "primerPerPiece", label: "Грунтовка", suffix: "тг/шт" },
   { key: "foamGluePerPiece", label: "Пеноклей", suffix: "тг/шт" },
+  // ── Краска (нормы расхода — в lib/prices.ts → PAINTS, тут только цены) ──
+  { key: "paintBaseAPerBucket", label: "База А", suffix: "тг/ведро" },
+  { key: "paintMixPerBucket", label: "Микс", suffix: "тг/ведро" },
+  { key: "paintBaseCPerBucket", label: "База С", suffix: "тг/ведро" },
 ];
 
 export default function PriceSettings({ prices, onChange, onReset }: Props) {
