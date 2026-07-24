@@ -102,8 +102,49 @@ export default function EstimatePanel({ estimate }: Props) {
         ))}
       </div>
 
+      {/* Расходные материалы — отдельный блок (по площади стен) */}
+      {estimate.consumables.length > 0 && (
+        <div className="mx-3 mt-3 rounded-xl border border-line bg-canvas px-4 py-3">
+          <div className="mb-2 flex items-baseline justify-between gap-3">
+            <span className="text-sm font-bold text-ink">Расходные материалы</span>
+            <span className="text-[11px] text-muted">
+              на {fmtNum(estimate.panelArea)} м² стен
+            </span>
+          </div>
+          <div className="divide-y divide-line/60">
+            {estimate.consumables.map((it) => (
+              <div key={it.key} className="flex items-baseline justify-between gap-3 py-2">
+                <div className="min-w-0">
+                  <span className="text-sm font-medium text-ink">{it.name}</span>
+                  <div className="tnum mt-0.5 text-xs text-muted">
+                    {it.detail}
+                    {it.unitPrice > 0 && (
+                      <span>
+                        {" · "}
+                        {fmtMoney(it.unitPrice)} {it.unitLabel}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="tnum shrink-0 text-sm font-bold text-goldLight">
+                  {it.unitPrice > 0 ? fmtMoney(it.total) : "—"}
+                </div>
+              </div>
+            ))}
+          </div>
+          {estimate.consumablesTotal > 0 && (
+            <div className="mt-2 flex items-center justify-between border-t border-line pt-2">
+              <span className="text-xs font-semibold text-muted">Итого расходники</span>
+              <span className="tnum text-sm font-bold text-ink">
+                {fmtMoney(estimate.consumablesTotal)}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Общая площадь */}
-      <div className="mx-3 flex items-center justify-between rounded-xl border border-line bg-canvas px-4 py-2.5">
+      <div className="mx-3 mt-3 flex items-center justify-between rounded-xl border border-line bg-canvas px-4 py-2.5">
         <span className="text-sm font-medium text-muted">Общая площадь</span>
         <span className="tnum text-base font-bold text-ink">
           {fmtNum(estimate.totalArea)} м²

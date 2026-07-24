@@ -34,6 +34,21 @@ export default function ClientKP({ estimate }: Props) {
       )
       .join("\n");
 
+    // Расходные материалы — отдельным блоком (те же данные, что на экране)
+    const consLines = estimate.consumables
+      .map((it) =>
+        it.unitPrice > 0
+          ? `• ${it.name} — ${it.detail} — ${fmtMoney(it.total)}`
+          : `• ${it.name} — ${it.detail}`
+      )
+      .join("\n");
+    const consBlock = estimate.consumables.length
+      ? `\nРасходные материалы (на ${fmtNum(estimate.panelArea)} м² стен):\n${consLines}\n` +
+        (estimate.consumablesTotal > 0
+          ? `Итого расходники: ${fmtMoney(estimate.consumablesTotal)}\n`
+          : "")
+      : "";
+
     return (
       `Коммерческое предложение — ${COMPANY.name}\n` +
       `──────────────────────\n` +
@@ -41,6 +56,7 @@ export default function ClientKP({ estimate }: Props) {
       `Адрес объекта: ${address.trim() || "—"}\n\n` +
       `Расчёт фасада (термопанель, травертин):\n` +
       `${lines}\n` +
+      consBlock +
       `──────────────────────\n` +
       `Термопанель (чистая площадь): ${fmtNum(estimate.panelArea)} м²\n` +
       `Фундамент (материал + краска): ${fmtNum(estimate.foundationArea)} м²\n` +

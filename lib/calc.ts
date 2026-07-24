@@ -3,10 +3,10 @@
 // ──────────────────────────────────────────
 // ⚠️  ВСЕ ЦЕНЫ и НОРМЫ живут в lib/prices.ts — там их и меняем.
 import { getDecor, type DecorItem } from "./decor";
-import { NORMS, DEFAULT_PRICES, type Prices } from "./prices";
+import { NORMS, DEFAULT_PRICES, CONSUMABLES, type Prices } from "./prices";
 
 // Ре-экспорт для обратной совместимости: старые импорты из "@/lib/calc" работают.
-export { NORMS, DEFAULT_PRICES };
+export { NORMS, DEFAULT_PRICES, CONSUMABLES };
 export type { Prices };
 
 // Стена: высота × длина
@@ -41,6 +41,8 @@ export interface LineItem {
 
 export interface Estimate {
   items: LineItem[];
+  consumables: LineItem[]; // расходники (клей/герметик/грунтовка/пеноклей) — отдельным блоком
+  consumablesTotal: number; // сумма расходников (входит в total)
   total: number;
   pricePerM2: number;
   // Площади (для отображения и КП)
@@ -116,16 +118,8 @@ export function calculate(
     total: round(panelArea * prices.termopanelPricePerM2),
   });
 
-  // 2. Клей = ceil(panelArea / 8) мешков
-  const glueBags = ceil(panelArea / NORMS.GLUE_M2_PER_BAG);
-  items.push({
-    key: "glue",
-    name: "Клей (25 кг)",
-    detail: `${glueBags} ${plural(glueBags, "мешок", "мешка", "мешков")}`,
-    unitLabel: "тг/мешок",
-    unitPrice: prices.gluePerBag,
-    total: glueBags * prices.gluePerBag,
-  });
+  // 2. Клей — БОЛЬШЕ НЕ ЗДЕСЬ. Считается в блоке «Расходные материалы»
+  //    (норма 1 мешок на 2.5 м², см. CONSUMABLES в lib/prices.ts), чтобы не было задвоения.
 
   // 3. Травертин = ceil(panelArea / 10) вёдер
   const travBuckets = ceil(panelArea / NORMS.TRAVERTINE_M2_PER_BUCKET);
@@ -212,11 +206,33 @@ export function calculate(
     bonus: true,
   });
 
-  const total = items.reduce((sum, it) => sum + it.total, 0);
+  // ── Расходные материалы ──
+  // Считаем от УЖЕ посчитанной площади стен (panelArea = стены − окна/двери),
+  // заново площадь не пересчитываем. Количество — всегда ceil (вверх).
+  // Нормы и цены — в lib/prices.ts (CONSUMABLES).
+  const consumables: LineItem[] = CONSUMABLES.map((c) => {
+    const qty = ceil(panelArea / c.m2PerUnit);
+    return {
+      key: c.key,
+      name: c.name,
+      detail:
+        `${qty} ${plural(qty, c.unitOne, c.unitFew, c.unitMany)} · ` +
+        `норма 1 на ${fmtNum(c.m2PerUnit)} м²`,
+      unitLabel: c.unitLabel,
+      unitPrice: c.price,
+      total: round(qty * c.price), // price = 0 → 0, итог не ломает
+    };
+  });
+  const consumablesTotal = consumables.reduce((s, it) => s + it.total, 0);
+
+  const total =
+    items.reduce((sum, it) => sum + it.total, 0) + consumablesTotal;
   const pricePerM2 = totalArea > 0 ? round(total / totalArea) : 0;
 
   return {
     items,
+    consumables,
+    consumablesTotal,
     total,
     pricePerM2,
     panelArea,
