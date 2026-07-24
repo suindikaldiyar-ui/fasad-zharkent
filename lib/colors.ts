@@ -112,5 +112,10 @@ export const COLORS: ColorItem[] = [
     "id": "color-22",
     "name": "Цвет 22",
     "image": "/references/colors/color-22.jpg"
+  },
+  {
+    "id": "color-24",
+    "name": "Цвет 24",
+    "image": "/references/colors/color-24.jpg"
   }
 ];

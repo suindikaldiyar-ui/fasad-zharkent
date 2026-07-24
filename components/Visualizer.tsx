@@ -37,6 +37,36 @@ export interface VisualizerInitial {
 type WallType = "none" | "termopanel" | "amk" | "panels";
 type PlinthType = "none" | "panels" | "foundation";
 
+// Готовые шаблоны комментария — чтобы замерщик не писал длинный текст руками.
+// Клик добавляет текст в поле (не затирая уже введённое). Текст можно править.
+const COMMENT_TEMPLATES: { id: string; label: string; text: string }[] = [
+  {
+    id: "landscaping",
+    label: "Благоустройство",
+    text:
+      "Убрать со двора весь строительный мусор, обрезки, плёнку, инструменты — территория идеально чистая.\n" +
+      "Двор — светло-серая брусчатка, ровная раскладка. Зелёный ухоженный газон по краям.\n" +
+      "Небо ясное, солнечный день, мягкие естественные тени.\n" +
+      "Фотореалистично, премиальный вид готового объекта.",
+  },
+  {
+    id: "zoning",
+    label: "Зонирование",
+    text:
+      "Верхняя полоса стены ~1 метр под крышей — тёмный клинкер.\n" +
+      "Основная часть стены — основной материал.\n" +
+      "Угловые колонны — тёмный клинкер.\n" +
+      "Цоколь — тёмный, контрастный.\n" +
+      "Между зонами чёткая горизонтальная граница.",
+  },
+  {
+    id: "keep-geometry",
+    label: "Сохранить геометрию",
+    text:
+      "ВАЖНО: геометрию дома — контур, этажность, форму крыши, окна, двери, террасы, ступени — НЕ менять.",
+  },
+];
+
 interface Props {
   initial?: VisualizerInitial;
 }
@@ -92,6 +122,10 @@ export default function Visualizer({ initial }: Props) {
     setDecorIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
+
+  // Шаблон комментария: если поле пустое — вставляем, иначе дописываем с новой строки.
+  const appendTemplate = (text: string) =>
+    setComment((prev) => (prev.trim() ? `${prev.trimEnd()}\n${text}` : text));
 
   // Переключение типа: активен один тип, поля остальных чистим →
   // в запрос уходят ТОЛЬКО поля выбранного типа. Стена и цоколь независимо.
@@ -919,18 +953,44 @@ export default function Visualizer({ initial }: Props) {
             )}
           </div>
 
-          {/* Комментарий */}
+          {/* Комментарий + готовые шаблоны */}
           <div>
             <p className="mb-2 text-sm font-semibold text-ink">
               Комментарий{" "}
               <span className="font-normal text-ink/40">(по желанию)</span>
             </p>
+
+            {/* Шаблоны: клик — дописывает текст в поле (не затирая) */}
+            <div className="mb-2 flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] text-muted">Готовые шаблоны:</span>
+              {COMMENT_TEMPLATES.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  title={t.text}
+                  onClick={() => appendTemplate(t.text)}
+                  className="rounded-lg border border-line px-2.5 py-1 text-[11px] font-semibold text-muted transition hover:border-gold hover:bg-gold/10 hover:text-gold"
+                >
+                  + {t.label}
+                </button>
+              ))}
+              {comment.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setComment("")}
+                  className="rounded-lg border border-line px-2.5 py-1 text-[11px] font-medium text-muted transition hover:border-red-400/60 hover:text-red-400"
+                >
+                  Очистить
+                </button>
+              )}
+            </div>
+
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              rows={2}
+              rows={4}
               placeholder="напр.: окна сделать белыми, колонны по углам"
-              className="w-full resize-none rounded-xl border border-line bg-canvas/50 px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink/30 focus:border-terracotta focus:bg-surface"
+              className="w-full resize-y rounded-xl border border-line bg-canvas/50 px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink/30 focus:border-terracotta focus:bg-surface"
             />
           </div>
 
