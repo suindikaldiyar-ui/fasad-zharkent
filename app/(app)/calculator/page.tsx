@@ -1,12 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  calculate,
-  DEFAULT_PRICES,
-  type CalcInputs,
-  type Prices,
-} from "@/lib/calc";
+import { calculate, type CalcInputs } from "@/lib/calc";
+import { usePrices } from "@/lib/usePrices";
 import ParamsPanel from "@/components/ParamsPanel";
 import EstimatePanel from "@/components/EstimatePanel";
 import ClientKP from "@/components/ClientKP";
@@ -25,7 +21,8 @@ const INITIAL_INPUTS: CalcInputs = {
 
 export default function CalculatorPage() {
   const [inputs, setInputs] = useState<CalcInputs>(INITIAL_INPUTS);
-  const [prices, setPrices] = useState<Prices>(DEFAULT_PRICES);
+  // Цены живут в localStorage: введённые сохраняются между сессиями.
+  const { prices, setPrices, resetPrices } = usePrices();
 
   // Цоколь/декор из каталога на смету не влияют (см. lib/calc.ts) → передаём пусто.
   const estimate = useMemo(
@@ -42,7 +39,7 @@ export default function CalculatorPage() {
           onInputs={setInputs}
           prices={prices}
           onPrices={setPrices}
-          onResetPrices={() => setPrices(DEFAULT_PRICES)}
+          onResetPrices={resetPrices}
         />
         <EstimatePanel estimate={estimate} />
       </div>

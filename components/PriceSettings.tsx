@@ -17,6 +17,11 @@ const FIELDS: { key: keyof Prices; label: string; suffix: string; locked?: boole
   { key: "cornerPerMeter", label: "Углы", suffix: "тг/м" },
   { key: "foundationMaterialPerM2", label: "Фундамент: материал", suffix: "тг/м²" },
   { key: "foundationPaintPerM2", label: "Фундамент: краска", suffix: "тг/м²" },
+  // ── Расходные материалы (нормы расхода — в lib/prices.ts, тут только цены) ──
+  { key: "gluePerBag", label: "Клей", suffix: "тг/мешок" },
+  { key: "sealantPerPiece", label: "Герметик", suffix: "тг/шт" },
+  { key: "primerPerPiece", label: "Грунтовка", suffix: "тг/шт" },
+  { key: "foamGluePerPiece", label: "Пеноклей", suffix: "тг/шт" },
 ];
 
 export default function PriceSettings({ prices, onChange, onReset }: Props) {

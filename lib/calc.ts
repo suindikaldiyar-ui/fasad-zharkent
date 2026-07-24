@@ -212,6 +212,8 @@ export function calculate(
   // Нормы и цены — в lib/prices.ts (CONSUMABLES).
   const consumables: LineItem[] = CONSUMABLES.map((c) => {
     const qty = ceil(panelArea / c.m2PerUnit);
+    // Цена берётся из настроек (панель «Настройка цен»), норма — из CONSUMABLES.
+    const unitPrice = Math.max(0, prices[c.priceKey] || 0);
     return {
       key: c.key,
       name: c.name,
@@ -219,8 +221,8 @@ export function calculate(
         `${qty} ${plural(qty, c.unitOne, c.unitFew, c.unitMany)} · ` +
         `норма 1 на ${fmtNum(c.m2PerUnit)} м²`,
       unitLabel: c.unitLabel,
-      unitPrice: c.price,
-      total: round(qty * c.price), // price = 0 → 0, итог не ломает
+      unitPrice,
+      total: round(qty * unitPrice), // цена 0 → 0, итог не ломает
     };
   });
   const consumablesTotal = consumables.reduce((s, it) => s + it.total, 0);

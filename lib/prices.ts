@@ -9,13 +9,17 @@
 // ─────────────────────────────────────────────
 export interface Prices {
   termopanelPricePerM2: number; // термопанель, тг/м²
-  // клей — перенесён в CONSUMABLES (норма 1 мешок на 2.5 м²), см. ниже
   travertinePerBucket: number; // травертин, тг/ведро (20 кг)
   lacquerPerCan: number; // лак, тг/банка (10 кг)
   framingPerMeter: number; // обрамление окон, тг/м
   cornerPerMeter: number; // углы, тг/м
   foundationMaterialPerM2: number; // фундамент: материал, тг/м²
   foundationPaintPerM2: number; // фундамент: краска, тг/м²
+  // ── Расходные материалы (нормы — ниже в CONSUMABLES, тут только ЦЕНЫ) ──
+  gluePerBag: number; // клей, тг/мешок
+  sealantPerPiece: number; // герметик, тг/шт
+  primerPerPiece: number; // грунтовка, тг/шт
+  foamGluePerPiece: number; // пеноклей, тг/шт
 }
 
 export const DEFAULT_PRICES: Prices = {
@@ -26,6 +30,11 @@ export const DEFAULT_PRICES: Prices = {
   cornerPerMeter: 3500, // ← углы, тг/м
   foundationMaterialPerM2: 3800, // ← фундамент: материал, тг/м²
   foundationPaintPerM2: 1500, // ← фундамент: краска, тг/м²
+  // Расходники — плейсхолдеры, редактируются в панели «Настройка цен»
+  gluePerBag: 0, // ← клей, тг/мешок
+  sealantPerPiece: 0, // ← герметик, тг/шт
+  primerPerPiece: 0, // ← грунтовка, тг/шт
+  foamGluePerPiece: 0, // ← пеноклей, тг/шт
 };
 
 // ─────────────────────────────────────────────
@@ -52,8 +61,8 @@ export const NORMS = {
 export interface Consumable {
   key: string;
   name: string;
-  m2PerUnit: number; // ← НОРМА: 1 единица на N м² стен
-  price: number; // ← ЦЕНА за единицу, тг (0 = плейсхолдер)
+  m2PerUnit: number; // ← НОРМА: 1 единица на N м² стен (меняется ТОЛЬКО здесь, в UI её нет)
+  priceKey: keyof Prices; // ← откуда берётся ЦЕНА (панель «Настройка цен»)
   unitLabel: string; // подпись цены, напр. "тг/мешок"
   unitOne: string; // 1 мешок
   unitFew: string; // 2 мешка
@@ -61,9 +70,9 @@ export interface Consumable {
 }
 
 export const CONSUMABLES: Consumable[] = [
-  //                            норма         цена   подпись        склонения
-  { key: "cons-glue",    name: "Клей",       m2PerUnit: 2.5, price: 0, unitLabel: "тг/мешок", unitOne: "мешок", unitFew: "мешка", unitMany: "мешков" },
-  { key: "cons-sealant", name: "Герметик",   m2PerUnit: 5,   price: 0, unitLabel: "тг/шт",    unitOne: "шт",    unitFew: "шт",    unitMany: "шт" },
-  { key: "cons-primer",  name: "Грунтовка",  m2PerUnit: 100, price: 0, unitLabel: "тг/шт",    unitOne: "шт",    unitFew: "шт",    unitMany: "шт" },
-  { key: "cons-foam",    name: "Пеноклей",   m2PerUnit: 40,  price: 0, unitLabel: "тг/шт",    unitOne: "шт",    unitFew: "шт",    unitMany: "шт" },
+  //                            норма          цена из Prices          подпись        склонения
+  { key: "cons-glue",    name: "Клей",      m2PerUnit: 2.5, priceKey: "gluePerBag",       unitLabel: "тг/мешок", unitOne: "мешок", unitFew: "мешка", unitMany: "мешков" },
+  { key: "cons-sealant", name: "Герметик",  m2PerUnit: 5,   priceKey: "sealantPerPiece",  unitLabel: "тг/шт",    unitOne: "шт",    unitFew: "шт",    unitMany: "шт" },
+  { key: "cons-primer",  name: "Грунтовка", m2PerUnit: 100, priceKey: "primerPerPiece",   unitLabel: "тг/шт",    unitOne: "шт",    unitFew: "шт",    unitMany: "шт" },
+  { key: "cons-foam",    name: "Пеноклей",  m2PerUnit: 40,  priceKey: "foamGluePerPiece", unitLabel: "тг/шт",    unitOne: "шт",    unitFew: "шт",    unitMany: "шт" },
 ];
